@@ -39,8 +39,8 @@
 #include <imgui.h>
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
-#include <AL/al.h>
-#include <AL/alc.h>
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
 #include <moFileReader.hpp>
 
 
