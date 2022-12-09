@@ -36,6 +36,10 @@
     #include <unistd.h> // readlink()
 #endif
 
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
 #include <OgrePlatform.h>
 #include <OgreFileSystem.h>
 #include <string>
@@ -181,7 +185,12 @@ std::string GetExecutablePath()
     const int BUF_SIZE = 500;
     std::string buf_str(BUF_SIZE, 0);
     // Linux or POSIX assumed; http://stackoverflow.com/a/625523
+#ifdef __APPLE__
+    uint32_t buf_size = BUF_SIZE;
+    if (_NSGetExecutablePath(&buf_str[0], &buf_size) != 0)
+#else
     if (readlink("/proc/self/exe", &buf_str[0], BUF_SIZE-1) == -1)
+#endif
     {
         RoR::LogFormat("[RoR] Internal error: GetExecutablePath() failed; readlink() sets errno to %d", static_cast<int>(errno));
         return std::string();
