@@ -383,7 +383,6 @@ set(CMAKE_THREAD_PREFER_PTHREAD YES)
 target_link_libraries(${BINNAME} PRIVATE
         Threads::Threads
         OGRE::OGRE
-        OIS::OIS
         fmt::fmt
         MyGUI::MyGUI
         RapidJSON::RapidJSON

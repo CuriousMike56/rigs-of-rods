@@ -67,6 +67,7 @@ protected:
     int                 writeIndex;
     int                 firstRun;
     unsigned long       curFrameTime;
+    int                 prevMouseX = 0;
 
     // malloc'ed
     node_simple_t*      nodes;

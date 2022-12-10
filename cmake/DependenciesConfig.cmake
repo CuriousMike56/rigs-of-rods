@@ -36,34 +36,6 @@ add_external_lib(
         FIND_PACKAGE_OPTIONS CONFIG
 )
 
-                                                                              
-#  TTTTTTTTTTTTTTTTTTTTTTT     OOOOOOOOO     DDDDDDDDDDDDD             OOOOOOOOO     
-#  T:::::::::::::::::::::T   OO:::::::::OO   D::::::::::::DDD        OO:::::::::OO   
-#  T:::::::::::::::::::::T OO:::::::::::::OO D:::::::::::::::DD    OO:::::::::::::OO 
-#  T:::::TT:::::::TT:::::TO:::::::OOO:::::::ODDD:::::DDDDD:::::D  O:::::::OOO:::::::O
-#  TTTTTT  T:::::T  TTTTTTO::::::O   O::::::O  D:::::D    D:::::D O::::::O   O::::::O
-#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
-#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
-#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
-#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
-#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
-#          T:::::T        O:::::O     O:::::O  D:::::D     D:::::DO:::::O     O:::::O
-#          T:::::T        O::::::O   O::::::O  D:::::D    D:::::D O::::::O   O::::::O
-#        TT:::::::TT      O:::::::OOO:::::::ODDD:::::DDDDD:::::D  O:::::::OOO:::::::O
-#        T:::::::::T       OO:::::::::::::OO D:::::::::::::::DD    OO:::::::::::::OO 
-#        T:::::::::T         OO:::::::::OO   D::::::::::::DDD        OO:::::::::OO   
-#        TTTTTTTTTTT           OOOOOOOOO     DDDDDDDDDDDDD             OOOOOOOOO     
-#                                                                                    
-# TODO: Needs to reverted back to "ois/1.4@rigsofrods/custom", but this package as to be updated first
-
-add_external_lib(
-        OIS
-        ois/1.5.1@anotherfoxguy/stable
-        REQUIRED
-        PKG_CONFIG "ois >= 1.4"
-        FIND_PACKAGE
-)
-
 add_external_lib(
         MyGUI
         mygui/3.4.1@anotherfoxguy/stable
