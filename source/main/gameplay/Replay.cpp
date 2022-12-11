@@ -66,7 +66,6 @@ Replay::Replay(Actor* actor, int _numFrames)
     // windowing
     int width = 300;
     int height = 60;
-    int x = (MyGUI::RenderManager::getInstance().getViewSize().width - width) / 2;
     int y = 0;
 }
 

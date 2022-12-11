@@ -56,9 +56,6 @@
 
 // Deps
 #include <Bites/OgreWindowEventUtilities.h>
-#include <MyGUI.h>
-#include <MyGUI_OgrePlatform.h>
-#include <MyGUI_UString.h>
 #include <OgreOverlay.h>
 
 namespace RoR {
@@ -164,10 +161,6 @@ public:
 private:
     void SetupImGui();
 
-    void eventRequestTag(const MyGUI::UString& _tag, MyGUI::UString& _result);
-
-    MyGUI::Gui*          m_mygui                    = nullptr;
-    MyGUI::OgrePlatform* m_mygui_platform           = nullptr;
     bool                 m_hide_gui                 = false;
     OgreImGui            m_imgui;
     GuiTheme             m_theme;

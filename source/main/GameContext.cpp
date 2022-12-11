@@ -416,18 +416,7 @@ void GameContext::ChangePlayerActor(Actor* actor)
 {
     Actor* prev_player_actor = m_player_actor;
     m_player_actor = actor;
-
-    // hide any old dashes
-    if (prev_player_actor && prev_player_actor->ar_dashboard)
-    {
-        prev_player_actor->ar_dashboard->setVisible3d(false);
-    }
-    // show new
-    if (m_player_actor && m_player_actor->ar_dashboard)
-    {
-        m_player_actor->ar_dashboard->setVisible3d(true);
-    }
-
+    
     if (prev_player_actor)
     {
         App::GetOverlayWrapper()->showDashboardOverlays(false, prev_player_actor);

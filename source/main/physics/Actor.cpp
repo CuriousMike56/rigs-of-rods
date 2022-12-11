@@ -2903,10 +2903,6 @@ void Actor::prepareInside(bool inside)
     }
     else
     {
-        if (ar_dashboard)
-        {
-            ar_dashboard->setVisible(false);
-        }
 
         App::GetCameraManager()->GetCamera()->setNearClipDistance(0.5f);
 
@@ -3027,7 +3023,6 @@ void Actor::updateFlareStates(float dt)
         }
         else if (ar_flares[i].fl_type == FlareType::DASHBOARD)
         {
-            isvisible = ar_dashboard->_getBool(ar_flares[i].dashboard_link);
         }
         else if (ar_flares[i].fl_type == FlareType::BLINKER_LEFT)
         {
@@ -3042,23 +3037,19 @@ void Actor::updateFlareStates(float dt)
 
         if (ar_flares[i].fl_type == FlareType::BLINKER_LEFT && m_blink_type == BLINK_LEFT)
         {
-            ar_dashboard->setBool(DD_SIGNAL_TURNLEFT, isvisible);
-
             if (isvisible)
                 SOUND_PLAY_ONCE(ar_instance_id, SS_TRIG_TURN_SIGNAL_TICK);
         }
         else if (ar_flares[i].fl_type == FlareType::BLINKER_RIGHT && m_blink_type == BLINK_RIGHT)
         {
-            ar_dashboard->setBool(DD_SIGNAL_TURNRIGHT, isvisible);
-
             if (isvisible)
                 SOUND_PLAY_ONCE(ar_instance_id, SS_TRIG_TURN_SIGNAL_TICK);
         }
         else if (ar_flares[i].fl_type == FlareType::BLINKER_LEFT && m_blink_type == BLINK_WARN)
         {
-            ar_dashboard->setBool(DD_SIGNAL_WARNING, isvisible);
-            ar_dashboard->setBool(DD_SIGNAL_TURNRIGHT, isvisible);
-            ar_dashboard->setBool(DD_SIGNAL_TURNLEFT, isvisible);
+            //ar_dashboard->setBool(DD_SIGNAL_WARNING, isvisible);
+            //ar_dashboard->setBool(DD_SIGNAL_TURNRIGHT, isvisible);
+            //ar_dashboard->setBool(DD_SIGNAL_TURNLEFT, isvisible);
 
             if (isvisible)
                 SOUND_PLAY_ONCE(ar_instance_id, SS_TRIG_TURN_SIGNAL_WARN_TICK);
@@ -3080,9 +3071,9 @@ void Actor::setBlinkType(BlinkType blink)
 {
     m_blink_type = blink;
 
-    ar_dashboard->setBool(DD_SIGNAL_WARNING, false);
-    ar_dashboard->setBool(DD_SIGNAL_TURNRIGHT, false);
-    ar_dashboard->setBool(DD_SIGNAL_TURNLEFT, false);
+    //ar_dashboard->setBool(DD_SIGNAL_WARNING, false);
+    //ar_dashboard->setBool(DD_SIGNAL_TURNRIGHT, false);
+    //ar_dashboard->setBool(DD_SIGNAL_TURNLEFT, false);
 
     if (blink == BLINK_NONE)
     {
@@ -3859,10 +3850,10 @@ void Actor::updateDashBoards(float dt)
     {
         // gears first
         int gear = ar_engine->GetGear();
-        ar_dashboard->setInt(DD_ENGINE_GEAR, gear);
+       // ar_dashboard->setInt(DD_ENGINE_GEAR, gear);
 
         int numGears = (int)ar_engine->getNumGears();
-        ar_dashboard->setInt(DD_ENGINE_NUM_GEAR, numGears);
+       // ar_dashboard->setInt(DD_ENGINE_NUM_GEAR, numGears);
 
         String str = String();
 
@@ -3874,7 +3865,7 @@ void Actor::updateDashBoards(float dt)
         else
             str = String("R");
 
-        ar_dashboard->setChar(DD_ENGINE_GEAR_STRING, str.c_str());
+      //  ar_dashboard->setChar(DD_ENGINE_GEAR_STRING, str.c_str());
 
         // R N D 2 1 String
         int cg = ar_engine->getAutoShift();
@@ -3891,43 +3882,43 @@ void Actor::updateDashBoards(float dt)
             //str = "#b8b8b8M\na\nn\nu\na\nl";
             str = "#b8b8b8M\na\nn\nu";
         }
-        ar_dashboard->setChar(DD_ENGINE_AUTOGEAR_STRING, str.c_str());
+        //ar_dashboard->setChar(DD_ENGINE_AUTOGEAR_STRING, str.c_str());
 
         // autogears
         int autoGear = ar_engine->getAutoShift();
-        ar_dashboard->setInt(DD_ENGINE_AUTO_GEAR, autoGear);
+        //ar_dashboard->setInt(DD_ENGINE_AUTO_GEAR, autoGear);
 
         // clutch
         float clutch = ar_engine->GetClutch();
-        ar_dashboard->setFloat(DD_ENGINE_CLUTCH, clutch);
+        //ar_dashboard->setFloat(DD_ENGINE_CLUTCH, clutch);
 
         // accelerator
         float acc = ar_engine->GetAcceleration();
-        ar_dashboard->setFloat(DD_ACCELERATOR, acc);
+        //ar_dashboard->setFloat(DD_ACCELERATOR, acc);
 
         // RPM
         float rpm = ar_engine->GetEngineRpm();
-        ar_dashboard->setFloat(DD_ENGINE_RPM, rpm);
+        //ar_dashboard->setFloat(DD_ENGINE_RPM, rpm);
 
         // turbo
         float turbo = ar_engine->GetTurboPsi() * 3.34f; // MAGIC :/
-        ar_dashboard->setFloat(DD_ENGINE_TURBO, turbo);
+        //ar_dashboard->setFloat(DD_ENGINE_TURBO, turbo);
 
         // ignition
         bool ign = (ar_engine->HasStarterContact() && !ar_engine->IsRunning());
-        ar_dashboard->setBool(DD_ENGINE_IGNITION, ign);
+        //ar_dashboard->setBool(DD_ENGINE_IGNITION, ign);
 
         // battery
         bool batt = (ar_engine->HasStarterContact() && !ar_engine->IsRunning());
-        ar_dashboard->setBool(DD_ENGINE_BATTERY, batt);
+        //ar_dashboard->setBool(DD_ENGINE_BATTERY, batt);
 
         // clutch warning
         bool cw = (fabs(ar_engine->GetTorque()) >= ar_engine->GetClutchForce() * 10.0f);
-        ar_dashboard->setBool(DD_ENGINE_CLUTCH_WARNING, cw);
+        //ar_dashboard->setBool(DD_ENGINE_CLUTCH_WARNING, cw);
     }
 
     // brake
-    ar_dashboard->setFloat(DD_BRAKE, ar_brake);
+    //ar_dashboard->setFloat(DD_BRAKE, ar_brake);
 
     Vector3 cam_dir  = this->GetCameraDir();
     Vector3 cam_roll = this->GetCameraRoll();
@@ -3941,13 +3932,11 @@ void Actor::updateDashBoards(float dt)
 
     // KPH
     float cur_speed_kph = ar_wheel_speed * 3.6f;
-    float smooth_kph = (cur_speed_kph * 0.3) + (ar_dashboard->_getFloat(DD_ENGINE_SPEEDO_KPH) * 0.7);
-    ar_dashboard->setFloat(DD_ENGINE_SPEEDO_KPH, smooth_kph);
+    float smooth_kph = (cur_speed_kph * 0.3);
 
     // MPH
     float cur_speed_mph = ar_wheel_speed * 2.23693629f;
-    float smooth_mph = (cur_speed_mph * 0.3) + (ar_dashboard->_getFloat(DD_ENGINE_SPEEDO_MPH) * 0.7);
-    ar_dashboard->setFloat(DD_ENGINE_SPEEDO_MPH, smooth_mph);
+    float smooth_mph = (cur_speed_mph * 0.3);
 
     // roll
     if (cam_roll != Vector3::ZERO)
@@ -3959,7 +3948,7 @@ void Actor::updateDashBoards(float dt)
             angle = 1;
 
         float f = Radian(angle).valueDegrees();
-        ar_dashboard->setFloat(DD_ROLL, f);
+        //ar_dashboard->setFloat(DD_ROLL, f);
     }
 
     // active shocks / roll correction
@@ -3967,10 +3956,10 @@ void Actor::updateDashBoards(float dt)
     {
         // TOFIX: certainly not working:
         float roll_corr = - m_stabilizer_shock_ratio * 10.0f;
-        ar_dashboard->setFloat(DD_ROLL_CORR, roll_corr);
+       // ar_dashboard->setFloat(DD_ROLL_CORR, roll_corr);
 
         bool corr_active = (m_stabilizer_shock_request > 0);
-        ar_dashboard->setBool(DD_ROLL_CORR_ACTIVE, corr_active);
+        //ar_dashboard->setBool(DD_ROLL_CORR_ACTIVE, corr_active);
     }
 
     // pitch
@@ -3983,23 +3972,23 @@ void Actor::updateDashBoards(float dt)
             angle = 1;
 
         float f = Radian(angle).valueDegrees();
-        ar_dashboard->setFloat(DD_PITCH, f);
+        //ar_dashboard->setFloat(DD_PITCH, f);
     }
 
     // parking brake
-    ar_dashboard->setBool(DD_PARKINGBRAKE, ar_parking_brake);
+    //ar_dashboard->setBool(DD_PARKINGBRAKE, ar_parking_brake);
 
     // locked lamp
     bool locked = isLocked();
-    ar_dashboard->setBool(DD_LOCKED, locked);
+   // ar_dashboard->setBool(DD_LOCKED, locked);
 
     // low pressure lamp
     bool low_pres = !ar_engine_hydraulics_ready;
-    ar_dashboard->setBool(DD_LOW_PRESSURE, low_pres);
+  //  ar_dashboard->setBool(DD_LOW_PRESSURE, low_pres);
 
     // lights
     bool lightsOn = m_headlight_on;
-    ar_dashboard->setBool(DD_LIGHTS, lightsOn);
+  // ar_dashboard->setBool(DD_LIGHTS, lightsOn);
 
     // turn signals already done by `updateFlareStates()` and `setBlinkType()`
 
@@ -4014,7 +4003,7 @@ void Actor::updateDashBoards(float dt)
             else
                 dash_tc_mode = 2;
         }
-        ar_dashboard->setInt(DD_TRACTIONCONTROL_MODE, dash_tc_mode);
+       // ar_dashboard->setInt(DD_TRACTIONCONTROL_MODE, dash_tc_mode);
     }
 
     // Anti Lock Brake
@@ -4028,7 +4017,7 @@ void Actor::updateDashBoards(float dt)
             else
                 dash_alb_mode = 2;
         }
-        ar_dashboard->setInt(DD_ANTILOCKBRAKE_MODE, dash_alb_mode);
+       // ar_dashboard->setInt(DD_ANTILOCKBRAKE_MODE, dash_alb_mode);
     }
 
     // load secured lamp
@@ -4040,56 +4029,30 @@ void Actor::updateDashBoards(float dt)
         else
             ties_mode = 2;
     }
-    ar_dashboard->setInt(DD_TIES_MODE, ties_mode);
+ //   ar_dashboard->setInt(DD_TIES_MODE, ties_mode);
 
     // Boat things now: screwprops and alike
     if (ar_num_screwprops)
     {
-        // the throttle and rudder
-        for (int i = 0; i < ar_num_screwprops && i < DD_MAX_SCREWPROP; i++)
-        {
-            float throttle = ar_screwprops[i]->getThrottle();
-            ar_dashboard->setFloat(DD_SCREW_THROTTLE_0 + i, throttle);
-
-            float steering = ar_screwprops[i]->getRudder();
-            ar_dashboard->setFloat(DD_SCREW_STEER_0 + i, steering);
-        }
 
         // water depth display, only if we have a screw prop at least
         float depth = this->getHeightAboveGround();
-        ar_dashboard->setFloat(DD_WATER_DEPTH, depth);
+      //  ar_dashboard->setFloat(DD_WATER_DEPTH, depth);
 
         // water speed
         Vector3 hdir = this->GetCameraDir();
         float knots = hdir.dotProduct(ar_nodes[ar_main_camera_node_pos].Velocity) * 1.9438f; // 1.943 = m/s in knots/s
-        ar_dashboard->setFloat(DD_WATER_SPEED, knots);
+    //    ar_dashboard->setFloat(DD_WATER_SPEED, knots);
     }
 
     // now airplane things, aeroengines, etc.
     if (ar_num_aeroengines)
     {
-        for (int i = 0; i < ar_num_aeroengines && i < DD_MAX_AEROENGINE; i++)
-        {
-            float throttle = ar_aeroengines[i]->getThrottle();
-            ar_dashboard->setFloat(DD_AEROENGINE_THROTTLE_0 + i, throttle);
-
-            bool failed = ar_aeroengines[i]->isFailed();
-            ar_dashboard->setBool(DD_AEROENGINE_FAILED_0 + i, failed);
-
-            float pcent = ar_aeroengines[i]->getRPMpc();
-            ar_dashboard->setFloat(DD_AEROENGINE_RPM_0 + i, pcent);
-        }
     }
 
     // wings stuff, you dont need an aeroengine
     if (ar_num_wings)
     {
-        for (int i = 0; i < ar_num_wings && i < DD_MAX_WING; i++)
-        {
-            // Angle of Attack (AOA)
-            float aoa = ar_wings[i].fa->aoa;
-            ar_dashboard->setFloat(DD_WING_AOA_0 + i, aoa);
-        }
     }
 
     // some things only activate when a wing or an aeroengine is present
@@ -4108,22 +4071,22 @@ void Actor::updateDashBoards(float dt)
             float airdensity = airpressure * 0.0000120896f; //1.225 at sea level
 
             float knots = ground_speed_kt * sqrt(airdensity / 1.225f); //KIAS
-            ar_dashboard->setFloat(DD_AIRSPEED, knots);
+       //     ar_dashboard->setFloat(DD_AIRSPEED, knots);
         }
 
         // altimeter (height above ground)
         {
             float alt = ar_nodes[0].AbsPosition.y * 1.1811f; // MAGIC
-            ar_dashboard->setFloat(DD_ALTITUDE, alt);
+       //     ar_dashboard->setFloat(DD_ALTITUDE, alt);
 
             char altc[11];
             sprintf(altc, "%03u", (int)(ar_nodes[0].AbsPosition.y / 30.48f)); // MAGIC
-            ar_dashboard->setChar(DD_ALTITUDE_STRING, altc);
+       //     ar_dashboard->setChar(DD_ALTITUDE_STRING, altc);
         }
     }
 
-    ar_dashboard->setFloat(DD_ODOMETER_TOTAL, m_odometer_total);
-    ar_dashboard->setFloat(DD_ODOMETER_USER, m_odometer_user);
+   // ar_dashboard->setFloat(DD_ODOMETER_TOTAL, m_odometer_total);
+   // ar_dashboard->setFloat(DD_ODOMETER_USER, m_odometer_user);
 
     // set the features of this vehicle once
     if (!m_hud_features_ok)
@@ -4138,25 +4101,25 @@ void Actor::updateDashBoards(float dt)
             autogearVisible = (ar_engine->getAutoShift() != EngineSim::MANUALMODE);
         }
 
-        ar_dashboard->setEnabled(DD_ENGINE_TURBO, hasturbo);
-        ar_dashboard->setEnabled(DD_ENGINE_GEAR, hasEngine);
-        ar_dashboard->setEnabled(DD_ENGINE_NUM_GEAR, hasEngine);
-        ar_dashboard->setEnabled(DD_ENGINE_GEAR_STRING, hasEngine);
-        ar_dashboard->setEnabled(DD_ENGINE_AUTO_GEAR, hasEngine);
-        ar_dashboard->setEnabled(DD_ENGINE_CLUTCH, hasEngine);
-        ar_dashboard->setEnabled(DD_ENGINE_RPM, hasEngine);
-        ar_dashboard->setEnabled(DD_ENGINE_IGNITION, hasEngine);
-        ar_dashboard->setEnabled(DD_ENGINE_BATTERY, hasEngine);
-        ar_dashboard->setEnabled(DD_ENGINE_CLUTCH_WARNING, hasEngine);
+        //ar_dashboard->setEnabled(DD_ENGINE_TURBO, hasturbo);
+        //ar_dashboard->setEnabled(DD_ENGINE_GEAR, hasEngine);
+        //ar_dashboard->setEnabled(DD_ENGINE_NUM_GEAR, hasEngine);
+        //ar_dashboard->setEnabled(DD_ENGINE_GEAR_STRING, hasEngine);
+        //ar_dashboard->setEnabled(DD_ENGINE_AUTO_GEAR, hasEngine);
+        //ar_dashboard->setEnabled(DD_ENGINE_CLUTCH, hasEngine);
+        //ar_dashboard->setEnabled(DD_ENGINE_RPM, hasEngine);
+        //ar_dashboard->setEnabled(DD_ENGINE_IGNITION, hasEngine);
+        //ar_dashboard->setEnabled(DD_ENGINE_BATTERY, hasEngine);
+        //ar_dashboard->setEnabled(DD_ENGINE_CLUTCH_WARNING, hasEngine);
 
-        ar_dashboard->setEnabled(DD_TRACTIONCONTROL_MODE, !tc_nodash);
-        ar_dashboard->setEnabled(DD_ANTILOCKBRAKE_MODE, !alb_nodash);
-        ar_dashboard->setEnabled(DD_TIES_MODE, !ar_ties.empty());
-        ar_dashboard->setEnabled(DD_LOCKED, !ar_hooks.empty());
+        //ar_dashboard->setEnabled(DD_TRACTIONCONTROL_MODE, !tc_nodash);
+        //ar_dashboard->setEnabled(DD_ANTILOCKBRAKE_MODE, !alb_nodash);
+        //ar_dashboard->setEnabled(DD_TIES_MODE, !ar_ties.empty());
+        //ar_dashboard->setEnabled(DD_LOCKED, !ar_hooks.empty());
 
-        ar_dashboard->setEnabled(DD_ENGINE_AUTOGEAR_STRING, autogearVisible);
+        //ar_dashboard->setEnabled(DD_ENGINE_AUTOGEAR_STRING, autogearVisible);
 
-        ar_dashboard->updateFeatures();
+        //ar_dashboard->updateFeatures();
         m_hud_features_ok = true;
     }
 
@@ -4268,7 +4231,7 @@ void Actor::updateDashBoards(float dt)
 }
 
 #endif //0
-    ar_dashboard->update(dt);
+    //ar_dashboard->update(dt);
 }
 
 void Actor::calculateLocalGForces()

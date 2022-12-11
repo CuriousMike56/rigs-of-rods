@@ -33,7 +33,7 @@
 #include "Language.h"
 #include "Utils.h"
 
-#include <MyGUI.h>
+
 #include <imgui.h>
 #include <imgui_internal.h>
 

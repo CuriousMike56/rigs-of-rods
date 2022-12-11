@@ -49,32 +49,8 @@ namespace RoR {
 
 GUIManager::GUIManager()
 {
-    std::string gui_logpath = PathCombine(App::sys_logs_dir->getStr(), "MyGUI.log");
-    auto mygui_platform = new MyGUI::OgrePlatform();
-    mygui_platform->initialise(
-        App::GetAppContext()->GetRenderWindow(), 
-        App::GetGfxScene()->GetSceneManager(),
-        Ogre::ResourceGroupManager::AUTODETECT_RESOURCE_GROUP_NAME,
-        gui_logpath); // use cache resource group so preview images are working
-    auto mygui = new MyGUI::Gui();
-
-    // empty init
-    mygui->initialise("");
-
-    // add layer factory
-    MyGUI::FactoryManager::getInstance().registerFactory<MyGUI::RTTLayer>("Layer");
-
-    // then load the actual config
-    MyGUI::ResourceManager::getInstance().load(RESOURCE_FILENAME);
-
-    MyGUI::ResourceManager::getInstance().load("MyGUI_FontsEnglish.xml");
-
-    m_mygui_platform = mygui_platform;
-    m_mygui = mygui;
-    MyGUI::PointerManager::getInstance().setVisible(false); // RoR is using mouse cursor drawn by DearIMGUI.
-
+    
 #ifdef _WIN32
-    MyGUI::LanguageManager::getInstance().eventRequestTag = MyGUI::newDelegate(this, &GUIManager::eventRequestTag);
 #endif // _WIN32
 
     this->SetupImGui();
@@ -90,19 +66,6 @@ GUIManager::~GUIManager()
 
 void GUIManager::ShutdownMyGUI()
 {
-    if (m_mygui)
-    {
-        m_mygui->shutdown();
-        delete m_mygui;
-        m_mygui = nullptr;
-    }
-
-    if (m_mygui_platform)
-    {
-        m_mygui_platform->shutdown();
-        delete m_mygui_platform;
-        m_mygui_platform = nullptr;
-    }
 }
 
 void GUIManager::ApplyGuiCaptureKeyboard()
@@ -213,11 +176,6 @@ void GUIManager::DrawSimGuiBuffered(GfxActor* player_gfx_actor)
     this->DirectionArrow.Update(player_gfx_actor);
 }
 
-void GUIManager::eventRequestTag(const MyGUI::UString& _tag, MyGUI::UString& _result)
-{
-    _result = MyGUI::LanguageManager::getInstance().getTag(_tag);
-}
-
 void GUIManager::SetUpMenuWallpaper()
 {
     // Determine image filename
@@ -257,7 +215,6 @@ void GUIManager::SetUpMenuWallpaper()
 
 void GUIManager::SetSceneManagerForGuiRendering(Ogre::SceneManager* scene_manager)
 {
-    m_mygui_platform->getRenderManagerPtr()->setSceneManager(scene_manager);
 }
 
 void GUIManager::SetGuiHidden(bool hidden)

@@ -384,7 +384,7 @@ target_link_libraries(${BINNAME} PRIVATE
         Threads::Threads
         OGRE::OGRE
         fmt::fmt
-        MyGUI::MyGUI
+        #MyGUI::MyGUI
         RapidJSON::RapidJSON
         )
 

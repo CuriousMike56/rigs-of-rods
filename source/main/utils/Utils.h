@@ -32,8 +32,6 @@
 #include "utf8/checked.h"
 #include "utf8/unchecked.h"
 
-#include <MyGUI.h>
-
 namespace RoR {
 
 Ogre::String sha1sum(const char *key, int len);

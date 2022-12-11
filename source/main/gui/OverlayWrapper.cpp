@@ -379,13 +379,6 @@ void OverlayWrapper::showDashboardOverlays(bool show, Actor* actor)
 {
     m_dashboard_visible = show;
 
-    // check if we use the new style dashboards
-    if (actor && actor->ar_dashboard && actor->ar_dashboard->WasDashboardLoaded())
-    {
-        actor->ar_dashboard->setVisible(show);
-        return;
-    }
-
     if (show)
     {
         int mode = actor ? actor->ar_driveable : -1;

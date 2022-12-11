@@ -209,7 +209,7 @@ void AppContext::windowResized(Ogre::RenderWindow* rw)
     {
         for (Actor* actor: App::GetGameContext()->GetActorManager()->GetActors())
         {
-            actor->ar_dashboard->windowResized();
+            //actor->ar_dashboard->windowResized();
         }
     }
 }
