@@ -202,7 +202,7 @@ bool RoR::Terrain::initialize()
     App::GetGfxScene()->CreateDustPools(); // Particle effects
 
     loading_window->SetProgress(92, _L("Initializing Overview Map Subsystem"));
-    App::GetGuiManager()->SurveyMap.CreateTerrainTextures(); // Should be done before actors are loaded, otherwise they'd show up in the static texture
+    //App::GetGuiManager()->SurveyMap.CreateTerrainTextures(); // Should be done before actors are loaded, otherwise they'd show up in the static texture
 
     LOG(" ===== LOADING TERRAIN ACTORS " + m_cache_entry->fname);
     loading_window->SetProgress(95, _L("Loading Terrain Actors"));
