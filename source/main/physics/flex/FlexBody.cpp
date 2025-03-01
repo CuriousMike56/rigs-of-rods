@@ -47,7 +47,7 @@ FlexBody::FlexBody(
     std::vector<unsigned int> & node_indices
 ):
       m_center_offset(offset)
-    , m_initial_rotation(rot)   // Added
+    , m_initial_rotation(rot)   // Store initial transform
     , m_node_center(ref)
     , m_node_x(nx)
     , m_node_y(ny)
@@ -687,6 +687,10 @@ void FlexBody::reset()
         for (int i=0; i<(int)m_vertex_count; i++) m_src_colors[i]=0x00000000;
         writeBlend();
     }
+
+    // Reset to initial position
+    m_scene_node->setPosition(m_initial_pos);
+    m_scene_node->setOrientation(m_initial_rot);
 }
 
 void FlexBody::writeBlend()
@@ -883,5 +887,79 @@ void FlexBody::defragmentFlexbodyMesh()
         {
             reorderIndexBuffer<uint32_t>(idx_data, new_index_lookup);
         }
+    }
+}
+
+Ogre::Vector3 FlexBody::GetFlexbodyWorldPosition()
+{
+    if (m_node_center >= 0)
+    {
+        NodeSB* nodes = m_gfx_actor->GetSimNodeBuffer();
+        
+        // Get reference transform from nodes
+        Ogre::Vector3 diffX = nodes[m_node_x].AbsPosition - nodes[m_node_center].AbsPosition;
+        Ogre::Vector3 diffY = nodes[m_node_y].AbsPosition - nodes[m_node_center].AbsPosition;
+
+        Ogre::Vector3 normal = fast_normalise(diffY.crossProduct(diffX));
+        return nodes[m_node_center].AbsPosition + 
+            diffX * m_center_offset.x + 
+            diffY * m_center_offset.y + 
+            normal * m_center_offset.z;
+    }
+    else
+    {
+        NodeSB* nodes = m_gfx_actor->GetSimNodeBuffer();  
+        return nodes[0].AbsPosition + m_center_offset;
+    }
+}
+
+void FlexBody::UpdateFlexbodyPosition()
+{
+    if (!this->AreRefNodesValid())
+    {
+        LOG(fmt::format("[RoR] ERROR: FlexBody '{}' has invalid reference nodes:"
+            " center:{}, x:{}, y:{}",
+            m_orig_mesh_name,
+            m_node_center,
+            m_node_x, 
+            m_node_y));
+        return;
+    }
+
+    NodeSB* nodes = m_gfx_actor->GetSimNodeBuffer();
+
+    // Get base transform from reference nodes
+    Ogre::Vector3 diffX = nodes[m_node_x].AbsPosition - nodes[m_node_center].AbsPosition;
+    Ogre::Vector3 diffY = nodes[m_node_y].AbsPosition - nodes[m_node_center].AbsPosition;
+    Ogre::Vector3 normal = fast_normalise(diffY.crossProduct(diffX));
+        
+    // Calc oriented position from nodes
+    Ogre::Vector3 ref_pos = nodes[m_node_center].AbsPosition;
+
+    // Calc oriented rotation from nodes    
+    Ogre::Vector3 ref_x = diffX.normalisedCopy();
+    Ogre::Vector3 ref_y = fast_normalise(normal.crossProduct(ref_x));
+    Ogre::Quaternion ref_rot = Ogre::Quaternion(ref_x, normal, ref_y);
+
+    if (m_offset_rot_changed)
+    {
+        // Store current edit transform
+        m_edit_offset = m_scene_node->getPosition() - ref_pos;
+        m_edit_rotation = m_scene_node->getOrientation() * ref_rot.Inverse();
+        m_offset_rot_changed = false;
+        m_is_edit_mode = true;
+    }
+    
+    if (m_is_edit_mode)
+    {
+        // Apply stored edit transform on top of reference transform
+        m_scene_node->setPosition(ref_pos + ref_rot * m_edit_offset);
+        m_scene_node->setOrientation(ref_rot * m_edit_rotation);
+    }
+    else
+    {
+        // Regular update - use initial transform values
+        m_scene_node->setPosition(GetFlexbodyWorldPosition());
+        m_scene_node->setOrientation(ref_rot * m_initial_rotation); 
     }
 }

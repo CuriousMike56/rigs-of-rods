@@ -33,6 +33,7 @@
 #include "Language.h"
 #include "Terrain.h"
 #include "Utils.h"
+#include "ApproxMath.h"  // <-- Add this include
 
 using namespace RoR;
 using namespace GUI;
@@ -159,47 +160,141 @@ void FlexbodyDebug::Draw()
 
     if (ImGui::CollapsingHeader("Position & rotation")) 
     {
-        if (flexbody)
+        // Get base transform from reference nodes 
+        NodeSB* nodes = actor->GetGfxActor()->GetSimNodeBuffer();
+
+        // Base position = ref node position
+        Ogre::Vector3 base_pos;
+        Ogre::Quaternion base_rot;
+
+        // Calculate base transform based on type
+        if (prop && prop->pp_node_ref != NODENUM_INVALID)
         {
-            bool values_changed = this->DrawOffsetRotationEdit(m_edit_offset, m_edit_rotation);
-            
-            if (values_changed)
+            // Props - use prop positioning method from GfxActor::UpdateProps()
+            if (prop->pp_node_x != NODENUM_INVALID && prop->pp_node_y != NODENUM_INVALID)
             {
-                flexbody->getSceneNode()->setPosition(m_edit_offset);
-                flexbody->getSceneNode()->setOrientation(m_edit_rotation);
+                Ogre::Vector3 diffX = nodes[prop->pp_node_x].AbsPosition - nodes[prop->pp_node_ref].AbsPosition;
+                Ogre::Vector3 diffY = nodes[prop->pp_node_y].AbsPosition - nodes[prop->pp_node_ref].AbsPosition;
+                Ogre::Vector3 normal = (diffY.crossProduct(diffX)).normalisedCopy();
+
+                // Position calculation from UpdateProps()
+                base_pos = nodes[prop->pp_node_ref].AbsPosition 
+                    + prop->pp_offset.x * diffX 
+                    + prop->pp_offset.y * diffY
+                    + normal * prop->pp_offset.z;
+
+                // Orientation calculation from UpdateProps()
+                Ogre::Vector3 refx = diffX.normalisedCopy();
+                Ogre::Vector3 refy = refx.crossProduct(normal);
+                base_rot = Ogre::Quaternion(refx, normal, refy);
+            }
+            else
+            {
+                // Single-node prop
+                base_pos = nodes[prop->pp_node_ref].AbsPosition;
+                base_rot = Ogre::Quaternion::IDENTITY;
+            }
+        }
+        else if (flexbody)
+        {
+            // Flexbodies - use all 3 nodes to build transform
+            Ogre::Vector3 diffX = nodes[node_x].AbsPosition - nodes[node_ref].AbsPosition;
+            Ogre::Vector3 diffY = nodes[node_y].AbsPosition - nodes[node_ref].AbsPosition;
+            Ogre::Vector3 normal = fast_normalise(diffY.crossProduct(diffX));
+            
+            base_pos = nodes[node_ref].AbsPosition;
+            
+            Ogre::Vector3 ref_x = diffX.normalisedCopy();
+            Ogre::Vector3 ref_y = fast_normalise(normal.crossProduct(ref_x));
+            base_rot = Ogre::Quaternion(ref_x, normal, ref_y);
+        }
+
+        // Initialize local transform (once when section opens)
+        if (!m_is_editing)
+        {
+            m_is_editing = true;
+            if (flexbody)
+            {
+                m_edit_offset = flexbody->getInitialOffset();
+                m_edit_rotation = flexbody->getInitialRotation();
+            }
+            else if (prop)
+            {
+                m_edit_offset = prop->pp_offset;
+                m_edit_rotation = Ogre::Quaternion(
+                    Ogre::Degree(prop->pp_rot.x), Ogre::Vector3::UNIT_X) *
+                    Ogre::Quaternion(Ogre::Degree(prop->pp_rot.y), Ogre::Vector3::UNIT_Y) *
+                    Ogre::Quaternion(Ogre::Degree(prop->pp_rot.z), Ogre::Vector3::UNIT_Z);
+            }
+        }
+
+        // Show editor UI
+        bool values_changed = this->DrawOffsetRotationEdit(m_edit_offset, m_edit_rotation);
+        
+        // Apply changes
+        if (values_changed) 
+        {
+            if (flexbody)
+            {
+                // Flexbodies - apply local transform on top of base
+                flexbody->getSceneNode()->setPosition(base_pos + base_rot * m_edit_offset);
+                flexbody->getSceneNode()->setOrientation(base_rot * m_edit_rotation);
                 m_offset_rot_changed = true;
             }
-
-            if (m_offset_rot_changed)
+            else if (prop)
             {
-                flexbody->computeFlexbody();
-                flexbody->updateFlexbodyVertexBuffers();
-            }
+                // Update prop visuals: use m_edit_rotation directly (do not pre-multiply with base_rot)
+                prop->pp_scene_node->setPosition(base_pos);
+                prop->pp_scene_node->setOrientation(m_edit_rotation); // Changed from base_rot * m_edit_rotation
 
-            this->DrawOffsetRotationReset(flexbody);
-        }
-        else if (prop) 
-        {
-            bool values_changed = this->DrawOffsetRotationEdit(m_edit_offset, m_edit_rotation);
-            
-            if (values_changed)
-            {
-                // Update position & orientation
-                prop->pp_scene_node->setPosition(m_edit_offset);
-                prop->pp_scene_node->setOrientation(m_edit_rotation);
-                
-                // Handle steering wheel prop specially
                 if (prop->pp_wheel_scene_node)
                 {
-                    prop->pp_wheel_scene_node->setPosition(m_edit_offset);
+                    prop->pp_wheel_scene_node->setPosition(base_pos);
                     prop->pp_wheel_scene_node->setOrientation(m_edit_rotation);
                 }
-                
+                // Persist the GUI changes into the prop’s stored values
+                prop->pp_offset = m_edit_offset;
+                {
+                    Ogre::Matrix3 rm;
+                    m_edit_rotation.ToRotationMatrix(rm);
+                    Ogre::Radian pitch, yaw, roll;
+                    rm.ToEulerAnglesXYZ(pitch, yaw, roll);
+                    prop->pp_rot.x = pitch.valueDegrees();
+                    prop->pp_rot.y = yaw.valueDegrees();
+                    prop->pp_rot.z = roll.valueDegrees();
+                }
                 m_offset_rot_changed = true;
             }
+        }
 
+        if (flexbody && m_offset_rot_changed)
+        {
+            flexbody->computeFlexbody();
+            flexbody->updateFlexbodyVertexBuffers();
+        }
+
+        if (flexbody)
+        {
+            this->DrawOffsetRotationReset(flexbody);
+        }
+        else if (prop)
+        {
             this->DrawOffsetRotationReset(prop);
         }
+    }
+    else
+    {
+        m_is_editing = false; // Reset edit state when UI section is collapsed
+    }
+
+    if (flexbody)
+    {
+        // Add ref node info
+        ImGui::Separator();
+        ImGui::TextDisabled("Reference nodes:"); 
+        ImGui::Text("Center: %d", flexbody->getRefNode());
+        ImGui::Text("X: %d", flexbody->getXNode());
+        ImGui::Text("Y: %d", flexbody->getYNode());
     }
 
     m_is_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
@@ -221,36 +316,108 @@ bool FlexbodyDebug::DrawOffsetRotationEdit(Ogre::Vector3& offset, Ogre::Quaterni
 {
     bool changed = false;
     
-    ImGui::Text("Position offset:");
-    changed |= ImGui::DragFloat("X##pos", &offset.x, 0.1f);
-    changed |= ImGui::DragFloat("Y##pos", &offset.y, 0.1f); 
-    changed |= ImGui::DragFloat("Z##pos", &offset.z, 0.1f);
-
-    // Store rotation as Euler angles for UI
-    Ogre::Matrix3 rot_matrix;
-    rotation.ToRotationMatrix(rot_matrix);
-    Ogre::Radian pitch, yaw, roll;
-    rot_matrix.ToEulerAnglesXYZ(pitch, yaw, roll);
-    
-    // Convert to degrees
-    static Ogre::Vector3 rotation_degrees;
-    rotation_degrees.x = pitch.valueDegrees();
-    rotation_degrees.y = yaw.valueDegrees();
-    rotation_degrees.z = roll.valueDegrees();
-
-    ImGui::Text("Rotation (degrees):");
-    bool rot_changed = false;
-    rot_changed |= ImGui::DragFloat("X##rot", &rotation_degrees.x, 1.0f);
-    rot_changed |= ImGui::DragFloat("Y##rot", &rotation_degrees.y, 1.0f);
-    rot_changed |= ImGui::DragFloat("Z##rot", &rotation_degrees.z, 1.0f);
-
-    if (rot_changed)
+    // Position
+    ImGui::Text("Position offset:"); 
+    static float pos[3] = {0,0,0}; // Store edited values separately
+    bool pos_changed = false;
+    pos_changed |= ImGui::SliderFloat("X##pos", &pos[0], -10.0f, 10.0f, "%.3f");
+    pos_changed |= ImGui::SliderFloat("Y##pos", &pos[1], -10.0f, 10.0f, "%.3f");  
+    pos_changed |= ImGui::SliderFloat("Z##pos", &pos[2], -10.0f, 10.0f, "%.3f");
+    if (ImGui::IsItemHovered())
     {
-        rotation = 
-            Ogre::Quaternion(Ogre::Degree(rotation_degrees.x), Ogre::Vector3::UNIT_X) *
-            Ogre::Quaternion(Ogre::Degree(rotation_degrees.y), Ogre::Vector3::UNIT_Y) *
-            Ogre::Quaternion(Ogre::Degree(rotation_degrees.z), Ogre::Vector3::UNIT_Z);
+        ImGui::SetTooltip("Use CTRL+click for manual input");
+    }
+
+    // Fine-tune buttons for position
+    ImGui::SameLine();
+    ImGui::BeginGroup();
+    if (ImGui::Button("-##posx")) { pos[0] -= 0.1f; pos_changed = true; }
+    if (ImGui::Button("-##posy")) { pos[1] -= 0.1f; pos_changed = true; }
+    if (ImGui::Button("-##posz")) { pos[2] -= 0.1f; pos_changed = true; }
+    ImGui::EndGroup();
+    ImGui::SameLine();
+    ImGui::BeginGroup();
+    if (ImGui::Button("+##posx")) { pos[0] += 0.1f; pos_changed = true; }
+    if (ImGui::Button("+##posy")) { pos[1] += 0.1f; pos_changed = true; }
+    if (ImGui::Button("+##posz")) { pos[2] += 0.1f; pos_changed = true; }
+    ImGui::EndGroup();
+
+    // Rotation (in degrees)
+    ImGui::Text("Rotation (degrees):"); 
+    static float rot[3] = {0,0,0}; // Store edited values separately
+    bool rot_changed = false;
+    rot_changed |= ImGui::SliderFloat("Pitch (X)##rot", &rot[0], -180.0f, 180.0f, "%.1f");
+    rot_changed |= ImGui::SliderFloat("Yaw (Y)##rot",   &rot[1], -180.0f, 180.0f, "%.1f");
+    rot_changed |= ImGui::SliderFloat("Roll (Z)##rot",  &rot[2], -180.0f, 180.0f, "%.1f");
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::SetTooltip("Use CTRL+click for manual input");
+    }
+
+    // Fine-tune buttons for rotation
+    ImGui::SameLine();
+    ImGui::BeginGroup();
+    if (ImGui::Button("-##rotx")) { rot[0] -= 1.0f; rot_changed = true; }
+    if (ImGui::Button("-##roty")) { rot[1] -= 1.0f; rot_changed = true; }
+    if (ImGui::Button("-##rotz")) { rot[2] -= 1.0f; rot_changed = true; }
+    ImGui::EndGroup();
+    ImGui::SameLine();
+    ImGui::BeginGroup();
+    if (ImGui::Button("+##rotx")) { rot[0] += 1.0f; rot_changed = true; }
+    if (ImGui::Button("+##roty")) { rot[1] += 1.0f; rot_changed = true; }
+    if (ImGui::Button("+##rotz")) { rot[2] += 1.0f; rot_changed = true; }
+    ImGui::EndGroup();
+
+    // Only update if values changed
+    if (pos_changed || rot_changed)
+    {
+        // Update position
+        offset.x = pos[0];
+        offset.y = pos[1];
+        offset.z = pos[2];
+
+        // NEW: For props use Yaw-Pitch-Roll; for flexbodies keep original order
+        // (Assumes that editing a prop implies m_combo_selection >= m_combo_props_start)
+        if (m_combo_selection >= m_combo_props_start)
+        {
+            rotation = 
+                Ogre::Quaternion(Ogre::Degree(rot[1]), Ogre::Vector3::UNIT_Y) * // Yaw
+                Ogre::Quaternion(Ogre::Degree(rot[0]), Ogre::Vector3::UNIT_X) * // Pitch
+                Ogre::Quaternion(Ogre::Degree(rot[2]), Ogre::Vector3::UNIT_Z);  // Roll
+        }
+        else
+        {
+            rotation = 
+                Ogre::Quaternion(Ogre::Degree(rot[0]), Ogre::Vector3::UNIT_X) * // Pitch
+                Ogre::Quaternion(Ogre::Degree(rot[1]), Ogre::Vector3::UNIT_Y) * // Yaw  
+                Ogre::Quaternion(Ogre::Degree(rot[2]), Ogre::Vector3::UNIT_Z);  // Roll
+        }
+
         changed = true;
+
+        LOG(fmt::format("[RoR|DBG] Prop edit - New offset ({:.3f}, {:.3f}, {:.3f}), rotation P={:.1f}, Y={:.1f}, R={:.1f}",
+            offset.x, offset.y, offset.z, rot[0], rot[1], rot[2]));
+    }
+
+    // Update input fields when object is selected/reset
+    if (!m_values_initialized)
+    {
+        // Position
+        pos[0] = offset.x;
+        pos[1] = offset.y;
+        pos[2] = offset.z;
+
+        // Convert current rotation to Euler angles in the correct order:
+        // X (pitch), Y (yaw), Z (roll)
+        Ogre::Matrix3 rot_matrix;
+        rotation.ToRotationMatrix(rot_matrix);
+        Ogre::Radian pitch, yaw, roll;
+        rot_matrix.ToEulerAnglesXYZ(pitch, yaw, roll);
+        rot[0] = pitch.valueDegrees();
+        rot[1] = yaw.valueDegrees(); 
+        rot[2] = roll.valueDegrees();
+
+        m_values_initialized = true;
     }
 
     return changed;
@@ -260,15 +427,37 @@ void FlexbodyDebug::DrawOffsetRotationReset(FlexBody* flexbody)
 {
     if (ImGui::Button("Reset position & rotation"))
     {
-        // Reset to original values from truckfile
+        // 1. Store initial values directly from flexbody
         m_edit_offset = flexbody->getInitialOffset();
         m_edit_rotation = flexbody->getInitialRotation();
-        
-        flexbody->getSceneNode()->setPosition(m_edit_offset);
-        flexbody->getSceneNode()->setOrientation(m_edit_rotation);
-            
+
+        // 2. Force input fields to update 
+        m_values_initialized = false;
+
+        // 3. Get current base transform for correct global->local conversion
+        NodeSB* nodes = App::GetGameContext()->GetPlayerActor()->GetGfxActor()->GetSimNodeBuffer(); 
+        const Ogre::Vector3 ref_pos = nodes[flexbody->getRefNode()].AbsPosition;
+        const Ogre::Vector3 x_pos = nodes[flexbody->getXNode()].AbsPosition;
+        const Ogre::Vector3 y_pos = nodes[flexbody->getYNode()].AbsPosition;
+
+        Ogre::Vector3 xaxis = (x_pos - ref_pos).normalisedCopy();
+        Ogre::Vector3 yaxis = (y_pos - ref_pos).normalisedCopy();
+        Ogre::Vector3 zaxis = xaxis.crossProduct(yaxis).normalisedCopy();
+        yaxis = zaxis.crossProduct(xaxis);
+
+        // 4. Build rotation matrix and convert to quaternion
+        Ogre::Matrix3 rot_mat;
+        rot_mat.FromAxes(xaxis, yaxis, zaxis);
+        Ogre::Quaternion base_rot(rot_mat);
+
+        // 5. Apply transforms in world space 
+        flexbody->getSceneNode()->setPosition(ref_pos + (base_rot * m_edit_offset));
+        flexbody->getSceneNode()->setOrientation(base_rot * m_edit_rotation);
+
+        // 6. Update mesh
         flexbody->computeFlexbody();
         flexbody->updateFlexbodyVertexBuffers();
+
         m_offset_rot_changed = true;
     }
 }
@@ -277,22 +466,29 @@ void FlexbodyDebug::DrawOffsetRotationReset(Prop* prop)
 {
     if (ImGui::Button("Reset position & rotation"))
     {
-        // Reset to original values from truckfile
+        // Just restore initial local transform from the prop's original values
         m_edit_offset = prop->pp_offset;
-        m_edit_rotation = Ogre::Quaternion(
-            Ogre::Degree(prop->pp_rot.x), Ogre::Vector3::UNIT_X) * 
-            Ogre::Quaternion(Ogre::Degree(prop->pp_rot.y), Ogre::Vector3::UNIT_Y) *
-            Ogre::Quaternion(Ogre::Degree(prop->pp_rot.z), Ogre::Vector3::UNIT_Z);
-        
+
+        // Build initial rotation using same order as original prop parsing:
+        // X (pitch), Y (yaw), Z (roll)  
+        m_edit_rotation = 
+            Ogre::Quaternion(Ogre::Degree(prop->pp_rot.x), Ogre::Vector3::UNIT_X) * // Pitch
+            Ogre::Quaternion(Ogre::Degree(prop->pp_rot.y), Ogre::Vector3::UNIT_Y) * // Yaw
+            Ogre::Quaternion(Ogre::Degree(prop->pp_rot.z), Ogre::Vector3::UNIT_Z);  // Roll
+
+        // Update all visual states
         prop->pp_scene_node->setPosition(m_edit_offset);
         prop->pp_scene_node->setOrientation(m_edit_rotation);
-            
+        
         if (prop->pp_wheel_scene_node)
         {
             prop->pp_wheel_scene_node->setPosition(m_edit_offset);
             prop->pp_wheel_scene_node->setOrientation(m_edit_rotation);
         }
+
+        // Reset edit state
         m_offset_rot_changed = true;
+        m_values_initialized = false; // Force input fields to update
     }
 }
 
@@ -383,8 +579,26 @@ void FlexbodyDebug::AnalyzeFlexbodies()
         {
             // Flexbody selected
             FlexBody* flexbody = actor->GetGfxActor()->GetFlexbodies()[m_combo_selection];
-            m_edit_offset = flexbody->getInitialOffset();
-            m_edit_rotation = flexbody->getInitialRotation();
+            m_edit_offset = flexbody->GetInitialOffset();
+            m_edit_rotation = flexbody->GetInitialRotation();
+
+            LOG(fmt::format("[RoR] DBG Flexbody init: mesh '{}' ", flexbody->getOrigMeshName()));
+
+            // Log initial rotation details - let's check if it's what we expect
+            Ogre::Matrix3 rot_matrix = Ogre::Matrix3::IDENTITY;
+            m_edit_rotation.ToRotationMatrix(rot_matrix);
+            Ogre::Radian pitch, yaw, roll;
+            rot_matrix.ToEulerAnglesXYZ(pitch, yaw, roll); // Changed to XYZ to match truck file order
+
+            LOG(fmt::format("[RoR] DBG Flexbody init: Raw constructor values - offset ({:.3f}, {:.3f}, {:.3f})", 
+                flexbody->GetInitialOffset().x, flexbody->GetInitialOffset().y, flexbody->GetInitialOffset().z));
+
+            LOG(fmt::format("[RoR] DBG Flexbody init: Processed values - offset ({:.3f}, {:.3f}, {:.3f}), rotation ({:.1f}, {:.1f}, {:.1f})", 
+                m_edit_offset.x, m_edit_offset.y, m_edit_offset.z,
+                pitch.valueDegrees(), yaw.valueDegrees(), roll.valueDegrees()));
+
+            LOG(fmt::format("[RoR] DBG Flexbody init: Will reconstruct as: pitch({:.1f}) -> yaw({:.1f}) -> roll({:.1f})",
+                pitch.valueDegrees(), yaw.valueDegrees(), roll.valueDegrees()));
         }
         else
         {

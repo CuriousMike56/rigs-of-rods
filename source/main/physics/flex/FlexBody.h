@@ -111,6 +111,23 @@ public:
     Ogre::Vector3 getInitialOffset() { return m_center_offset; }
     Ogre::Quaternion getInitialRotation() { return m_initial_rotation; } // Changed from Vector3
 
+    bool AreRefNodesValid() const
+    {
+        return (m_node_center != NODENUM_INVALID && m_node_x != NODENUM_INVALID && m_node_y != NODENUM_INVALID);
+    }
+
+    Ogre::Vector3 GetFlexbodyWorldPosition();
+    void UpdateFlexbodyPosition();
+
+    // Add getters for reference nodes
+    NodeNum_t getRefNode() const { return m_node_center; }
+    NodeNum_t getXNode() const { return m_node_x; }
+    NodeNum_t getYNode() const { return m_node_y; }
+
+    // Get initial transform
+    Ogre::Vector3 GetInitialOffset() const { return m_center_offset; }
+    Ogre::Quaternion GetInitialRotation() const { return m_initial_rotation; }
+
 private:
 
     void defragmentFlexbodyMesh();
@@ -130,8 +147,14 @@ private:
     NodeNum_t         m_node_center = NODENUM_INVALID;
     NodeNum_t         m_node_x = NODENUM_INVALID;
     NodeNum_t         m_node_y = NODENUM_INVALID;
-    Ogre::Vector3     m_center_offset = Ogre::Vector3::ZERO;
-    Ogre::Quaternion  m_initial_rotation = Ogre::Quaternion::IDENTITY;  // Added
+    Ogre::Vector3     m_center_offset = Ogre::Vector3::ZERO;       // Initial offset relative to ref frame 
+    Ogre::Quaternion  m_initial_rotation = Ogre::Quaternion::IDENTITY; // Initial rotation relative to ref frame
+
+    // Edit mode transform
+    bool m_is_edit_mode = false;
+    Ogre::Vector3 m_edit_offset = Ogre::Vector3::ZERO;
+    Ogre::Quaternion m_edit_rotation = Ogre::Quaternion::IDENTITY;
+
     Ogre::SceneNode*  m_scene_node = nullptr;
     Ogre::Entity*     m_scene_entity = nullptr;
     bool              m_offset_rot_changed = false;
@@ -157,7 +180,11 @@ private:
     std::vector<NodeNum_t> m_forset_nodes;
     std::string m_orig_mesh_info;
     std::string m_orig_mesh_name;
+
+    Ogre::Vector3    m_initial_pos;
+    Ogre::Quaternion m_initial_rot; // Initial rotation relative to reference frame
 };
+
 
 /// @} // addtogroup Flex
 /// @} // addtogroup Gfx
