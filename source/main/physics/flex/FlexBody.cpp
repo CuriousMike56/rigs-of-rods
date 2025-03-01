@@ -47,6 +47,7 @@ FlexBody::FlexBody(
     std::vector<unsigned int> & node_indices
 ):
       m_center_offset(offset)
+    , m_initial_rotation(rot)   // Added
     , m_node_center(ref)
     , m_node_x(nx)
     , m_node_y(ny)
@@ -603,6 +604,13 @@ void FlexBody::setFlexbodyCastShadow(bool val)
 void FlexBody::computeFlexbody()
 {
     if (m_has_texture_blend) updateBlend();
+
+    // Update mesh position/rotation
+    if (m_offset_rot_changed)
+    {
+        // TODO: Implement if needed
+        m_offset_rot_changed = false; 
+    }
 
     RoR::NodeSB* nodes = m_gfx_actor->GetSimNodeBuffer();
 

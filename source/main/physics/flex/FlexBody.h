@@ -96,7 +96,7 @@ public:
     const std::string& getOrigMeshName() const { return m_orig_mesh_name; }
     std::vector<NodeNum_t>& getForsetNodes() { return m_forset_nodes; };
     std::string getOrigMeshInfo() { return m_orig_mesh_info; }
-    std::string getLiveMeshInfo() { return RoR::PrintMeshInfo("Live", m_scene_entity->getMesh()); }
+    std::string getLiveMeshInfo() { return RoR::PrintMeshInfo("Live mesh", m_scene_entity->getMesh()); }
 
     NodeNum_t getRefNode() { return m_node_center; }
     NodeNum_t getXNode() { return m_node_x; }
@@ -105,6 +105,11 @@ public:
     FlexbodyID_t getID() const { return m_id; }
     PlaceholderType getPlaceholderType() const { return m_placeholder_type; }
     void destroyOgreObjects();
+
+    // Getters for editor
+    Ogre::SceneNode* getSceneNode() { return m_scene_node; }
+    Ogre::Vector3 getInitialOffset() { return m_center_offset; }
+    Ogre::Quaternion getInitialRotation() { return m_initial_rotation; } // Changed from Vector3
 
 private:
 
@@ -126,8 +131,10 @@ private:
     NodeNum_t         m_node_x = NODENUM_INVALID;
     NodeNum_t         m_node_y = NODENUM_INVALID;
     Ogre::Vector3     m_center_offset = Ogre::Vector3::ZERO;
+    Ogre::Quaternion  m_initial_rotation = Ogre::Quaternion::IDENTITY;  // Added
     Ogre::SceneNode*  m_scene_node = nullptr;
     Ogre::Entity*     m_scene_entity = nullptr;
+    bool              m_offset_rot_changed = false;
     int               m_camera_mode = CAMERA_MODE_ALWAYS_VISIBLE; //!< Visibility control {-2 = always, -1 = 3rdPerson only, 0+ = cinecam index}
 
     int                                 m_shared_buf_num_verts = 0;
