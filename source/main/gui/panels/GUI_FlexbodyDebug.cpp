@@ -316,10 +316,34 @@ bool FlexbodyDebug::DrawOffsetRotationEdit(Ogre::Vector3& offset, Ogre::Quaterni
 {
     bool changed = false;
     
+    // Position and rotation arrays
+    static float pos[3] = {0,0,0}; // Store edited values separately
+    static float rot[3] = {0,0,0}; // Store edited values separately
+    bool pos_changed = false;
+    bool rot_changed = false;
+
+    // Initialize values when starting
+    if (!m_values_initialized)
+    {
+        // Position
+        pos[0] = offset.x;
+        pos[1] = offset.y;
+        pos[2] = offset.z;
+
+        // Convert current rotation to Euler angles 
+        Ogre::Matrix3 rot_matrix;
+        rotation.ToRotationMatrix(rot_matrix);
+        Ogre::Radian pitch, yaw, roll;
+        rot_matrix.ToEulerAnglesXYZ(pitch, yaw, roll);
+        rot[0] = pitch.valueDegrees();
+        rot[1] = yaw.valueDegrees(); 
+        rot[2] = roll.valueDegrees();
+
+        m_values_initialized = true;
+    }
+
     // Position
     ImGui::Text("Position offset:"); 
-    static float pos[3] = {0,0,0}; // Store edited values separately
-    bool pos_changed = false;
     pos_changed |= ImGui::SliderFloat("X##pos", &pos[0], -10.0f, 10.0f, "%.3f");
     pos_changed |= ImGui::SliderFloat("Y##pos", &pos[1], -10.0f, 10.0f, "%.3f");  
     pos_changed |= ImGui::SliderFloat("Z##pos", &pos[2], -10.0f, 10.0f, "%.3f");
@@ -344,8 +368,6 @@ bool FlexbodyDebug::DrawOffsetRotationEdit(Ogre::Vector3& offset, Ogre::Quaterni
 
     // Rotation (in degrees)
     ImGui::Text("Rotation (degrees):"); 
-    static float rot[3] = {0,0,0}; // Store edited values separately
-    bool rot_changed = false;
     rot_changed |= ImGui::SliderFloat("Pitch (X)##rot", &rot[0], -180.0f, 180.0f, "%.1f");
     rot_changed |= ImGui::SliderFloat("Yaw (Y)##rot",   &rot[1], -180.0f, 180.0f, "%.1f");
     rot_changed |= ImGui::SliderFloat("Roll (Z)##rot",  &rot[2], -180.0f, 180.0f, "%.1f");

@@ -84,8 +84,6 @@ private:
     bool m_is_hovered = false;
 
     bool m_values_initialized = false;  // Add this line - for tracking initialization of input fields
-
-    Ogre::Vector3 m_euler_angles;     // Store original Euler angles for props
 };
 
 } // namespace GUI
