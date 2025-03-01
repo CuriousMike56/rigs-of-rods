@@ -22,7 +22,6 @@
 #pragma once
 
 #include "Application.h"
-
 #include "SimData.h"
 #include <OgreVector3.h>
 
@@ -42,21 +41,30 @@ public:
     void AnalyzeFlexbodies(); //!< populates the combobox
     void DrawDebugView(FlexBody* flexbody, Prop* prop, NodeNum_t node_ref, NodeNum_t node_x, NodeNum_t node_y);
 
+    void EditPropPosition(int prop_id, Ogre::Vector3 offset);
+    void EditPropRotation(int prop_id, Ogre::Vector3 rotation);
+
 private:
 
     void UpdateVisibility();
     void DrawMemoryOrderGraph(FlexBody* flexbody);
-    void DrawLocatorsTable(FlexBody* flexbody, bool& locators_visible);
-    void DrawMeshInfo(FlexBody* flexbody);
-    void DrawMeshInfo(Prop* prop);
     bool DrawOffsetRotationEdit(Ogre::Vector3& offset, Ogre::Quaternion& rotation); // Changed param type
     void DrawOffsetRotationReset(FlexBody* flexbody);
     void DrawOffsetRotationReset(Prop* prop);
+
+    // Add these new method declarations
+    void DrawLocatorsTable(FlexBody* flexbody, bool& locators_visible);
+    void DrawMeshInfo(FlexBody* flexbody); 
+    void DrawMeshInfo(Prop* prop);
 
     // For editing offset/rotation
     Ogre::Vector3 m_edit_offset;     // Cache edited position values
     Ogre::Quaternion m_edit_rotation;   // Changed from Vector3
     bool m_offset_rot_changed; // Flag to trigger updates
+
+    bool m_is_editing = false; // Track if we're currently editing
+    Ogre::Vector3 m_initial_local_pos;     // Store initial local position 
+    Ogre::Quaternion m_initial_local_rot;  // Store initial local rotation
 
     // Display options
     bool draw_mesh_wireframe = false;
@@ -74,6 +82,10 @@ private:
     // Window state
     bool m_is_visible = false;
     bool m_is_hovered = false;
+
+    bool m_values_initialized = false;  // Add this line - for tracking initialization of input fields
+
+    Ogre::Vector3 m_euler_angles;     // Store original Euler angles for props
 };
 
 } // namespace GUI

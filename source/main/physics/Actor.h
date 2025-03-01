@@ -666,6 +666,17 @@ private:
     };
 
     std::deque<NetUpdate> m_net_updates; //!< Incoming stream of NetUpdates
+
+    bool m_propEditing = false;
+    int  m_editedPropIndex = -1;
+
+public:
+    bool isPropEditing() const { return m_propEditing; }
+    int  getEditedPropIndex() const { return m_editedPropIndex; }
+    void SetPropEditing(bool editing, int index = -1) {
+        m_propEditing = editing;
+        m_editedPropIndex = index;
+    }
 };
 
 /// @} // addtogroup Physics

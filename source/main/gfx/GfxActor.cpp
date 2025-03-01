@@ -2306,8 +2306,15 @@ void RoR::GfxActor::UpdateProps(float dt, bool is_player_actor)
     NodeSB* nodes = this->GetSimNodeBuffer();
 
     // Update prop meshes
-    for (Prop& prop: m_props)
+    for (size_t i = 0; i < m_props.size(); i++)
     {
+        Prop& prop = m_props[i];
+        // Skip updating if this prop is currently edited (so GUI changes remain visible)
+        if (m_actor->isPropEditing() && m_actor->getEditedPropIndex() == int(i))
+        {
+            continue;
+        }
+
         if (prop.pp_scene_node == nullptr) // Wing beacons don't have scenenodes
             continue;
 
