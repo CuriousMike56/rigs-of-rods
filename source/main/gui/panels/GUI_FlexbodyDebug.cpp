@@ -157,6 +157,51 @@ void FlexbodyDebug::Draw()
             this->DrawMeshInfo(prop);
     }
 
+    if (ImGui::CollapsingHeader("Position & rotation")) 
+    {
+        if (flexbody)
+        {
+            bool values_changed = this->DrawOffsetRotationEdit(m_edit_offset, m_edit_rotation);
+            
+            if (values_changed)
+            {
+                flexbody->getSceneNode()->setPosition(m_edit_offset);
+                flexbody->getSceneNode()->setOrientation(m_edit_rotation);
+                m_offset_rot_changed = true;
+            }
+
+            if (m_offset_rot_changed)
+            {
+                flexbody->computeFlexbody();
+                flexbody->updateFlexbodyVertexBuffers();
+            }
+
+            this->DrawOffsetRotationReset(flexbody);
+        }
+        else if (prop) 
+        {
+            bool values_changed = this->DrawOffsetRotationEdit(m_edit_offset, m_edit_rotation);
+            
+            if (values_changed)
+            {
+                // Update position & orientation
+                prop->pp_scene_node->setPosition(m_edit_offset);
+                prop->pp_scene_node->setOrientation(m_edit_rotation);
+                
+                // Handle steering wheel prop specially
+                if (prop->pp_wheel_scene_node)
+                {
+                    prop->pp_wheel_scene_node->setPosition(m_edit_offset);
+                    prop->pp_wheel_scene_node->setOrientation(m_edit_rotation);
+                }
+                
+                m_offset_rot_changed = true;
+            }
+
+            this->DrawOffsetRotationReset(prop);
+        }
+    }
+
     m_is_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
     App::GetGuiManager()->RequestGuiCaptureKeyboard(m_is_hovered);
     ImGui::End();
@@ -169,6 +214,85 @@ void FlexbodyDebug::Draw()
     if (this->show_base_nodes || this->show_forset_nodes || this->show_vertices || flexbody_locators_visible)
     {
         this->DrawDebugView(flexbody, prop, node_ref, node_x, node_y);
+    }
+}
+
+bool FlexbodyDebug::DrawOffsetRotationEdit(Ogre::Vector3& offset, Ogre::Quaternion& rotation)
+{
+    bool changed = false;
+    
+    ImGui::Text("Position offset:");
+    changed |= ImGui::DragFloat("X##pos", &offset.x, 0.1f);
+    changed |= ImGui::DragFloat("Y##pos", &offset.y, 0.1f); 
+    changed |= ImGui::DragFloat("Z##pos", &offset.z, 0.1f);
+
+    // Store rotation as Euler angles for UI
+    Ogre::Matrix3 rot_matrix;
+    rotation.ToRotationMatrix(rot_matrix);
+    Ogre::Radian pitch, yaw, roll;
+    rot_matrix.ToEulerAnglesXYZ(pitch, yaw, roll);
+    
+    // Convert to degrees
+    static Ogre::Vector3 rotation_degrees;
+    rotation_degrees.x = pitch.valueDegrees();
+    rotation_degrees.y = yaw.valueDegrees();
+    rotation_degrees.z = roll.valueDegrees();
+
+    ImGui::Text("Rotation (degrees):");
+    bool rot_changed = false;
+    rot_changed |= ImGui::DragFloat("X##rot", &rotation_degrees.x, 1.0f);
+    rot_changed |= ImGui::DragFloat("Y##rot", &rotation_degrees.y, 1.0f);
+    rot_changed |= ImGui::DragFloat("Z##rot", &rotation_degrees.z, 1.0f);
+
+    if (rot_changed)
+    {
+        rotation = 
+            Ogre::Quaternion(Ogre::Degree(rotation_degrees.x), Ogre::Vector3::UNIT_X) *
+            Ogre::Quaternion(Ogre::Degree(rotation_degrees.y), Ogre::Vector3::UNIT_Y) *
+            Ogre::Quaternion(Ogre::Degree(rotation_degrees.z), Ogre::Vector3::UNIT_Z);
+        changed = true;
+    }
+
+    return changed;
+}
+
+void FlexbodyDebug::DrawOffsetRotationReset(FlexBody* flexbody)
+{
+    if (ImGui::Button("Reset position & rotation"))
+    {
+        // Reset to original values from truckfile
+        m_edit_offset = flexbody->getInitialOffset();
+        m_edit_rotation = flexbody->getInitialRotation();
+        
+        flexbody->getSceneNode()->setPosition(m_edit_offset);
+        flexbody->getSceneNode()->setOrientation(m_edit_rotation);
+            
+        flexbody->computeFlexbody();
+        flexbody->updateFlexbodyVertexBuffers();
+        m_offset_rot_changed = true;
+    }
+}
+
+void FlexbodyDebug::DrawOffsetRotationReset(Prop* prop)
+{
+    if (ImGui::Button("Reset position & rotation"))
+    {
+        // Reset to original values from truckfile
+        m_edit_offset = prop->pp_offset;
+        m_edit_rotation = Ogre::Quaternion(
+            Ogre::Degree(prop->pp_rot.x), Ogre::Vector3::UNIT_X) * 
+            Ogre::Quaternion(Ogre::Degree(prop->pp_rot.y), Ogre::Vector3::UNIT_Y) *
+            Ogre::Quaternion(Ogre::Degree(prop->pp_rot.z), Ogre::Vector3::UNIT_Z);
+        
+        prop->pp_scene_node->setPosition(m_edit_offset);
+        prop->pp_scene_node->setOrientation(m_edit_rotation);
+            
+        if (prop->pp_wheel_scene_node)
+        {
+            prop->pp_wheel_scene_node->setPosition(m_edit_offset);
+            prop->pp_wheel_scene_node->setOrientation(m_edit_rotation);
+        }
+        m_offset_rot_changed = true;
     }
 }
 
@@ -251,6 +375,31 @@ void FlexbodyDebug::AnalyzeFlexbodies()
     }
 
     ImTerminateComboboxString(m_combo_items);
+
+    // Initialize offset/rotation editors
+    if (actor && m_combo_selection >= 0)
+    {
+        if (m_combo_props_start == -1 || m_combo_selection < m_combo_props_start)
+        {
+            // Flexbody selected
+            FlexBody* flexbody = actor->GetGfxActor()->GetFlexbodies()[m_combo_selection];
+            m_edit_offset = flexbody->getInitialOffset();
+            m_edit_rotation = flexbody->getInitialRotation();
+        }
+        else
+        {
+            // Prop selected  
+            Prop& prop = actor->GetGfxActor()->getProps()[m_combo_selection - m_combo_props_start];
+            m_edit_offset = prop.pp_offset;
+            // Convert Euler angles to quaternion
+            m_edit_rotation = Ogre::Quaternion(
+                Ogre::Degree(prop.pp_rot.x), Ogre::Vector3::UNIT_X) *
+                Ogre::Quaternion(Ogre::Degree(prop.pp_rot.y), Ogre::Vector3::UNIT_Y) *
+                Ogre::Quaternion(Ogre::Degree(prop.pp_rot.z), Ogre::Vector3::UNIT_Z);
+        }
+    }
+
+    m_offset_rot_changed = false;
 }
 
 const ImVec4 FORSETNODE_COLOR_V4(1.f, 0.87f, 0.3f, 1.f);

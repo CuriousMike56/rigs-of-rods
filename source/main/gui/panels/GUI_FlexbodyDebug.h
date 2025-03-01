@@ -24,6 +24,7 @@
 #include "Application.h"
 
 #include "SimData.h"
+#include <OgreVector3.h>
 
 namespace RoR {
 namespace GUI {
@@ -48,6 +49,14 @@ private:
     void DrawLocatorsTable(FlexBody* flexbody, bool& locators_visible);
     void DrawMeshInfo(FlexBody* flexbody);
     void DrawMeshInfo(Prop* prop);
+    bool DrawOffsetRotationEdit(Ogre::Vector3& offset, Ogre::Quaternion& rotation); // Changed param type
+    void DrawOffsetRotationReset(FlexBody* flexbody);
+    void DrawOffsetRotationReset(Prop* prop);
+
+    // For editing offset/rotation
+    Ogre::Vector3 m_edit_offset;     // Cache edited position values
+    Ogre::Quaternion m_edit_rotation;   // Changed from Vector3
+    bool m_offset_rot_changed; // Flag to trigger updates
 
     // Display options
     bool draw_mesh_wireframe = false;
