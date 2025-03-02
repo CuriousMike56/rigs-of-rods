@@ -374,48 +374,112 @@ bool FlexbodyDebug::DrawOffsetRotationEdit(Ogre::Vector3& offset, Ogre::Quaterni
     }
 
     // Position
-    ImGui::Text("Position offset:"); 
-    pos_changed |= ImGui::SliderFloat("X##pos", &pos[0], -10.0f, 10.0f, "%.3f");
-    pos_changed |= ImGui::SliderFloat("Y##pos", &pos[1], -10.0f, 10.0f, "%.3f");  
-    pos_changed |= ImGui::SliderFloat("Z##pos", &pos[2], -10.0f, 10.0f, "%.3f");
-
-    // Fine-tune buttons for position
-    ImGui::SameLine();
-    ImGui::BeginGroup();
-    if (ImGui::Button("-##posx")) { pos[0] -= 0.1f; pos_changed = true; }
-    if (ImGui::Button("-##posy")) { pos[1] -= 0.1f; pos_changed = true; }
-    if (ImGui::Button("-##posz")) { pos[2] -= 0.1f; pos_changed = true; }
-    ImGui::EndGroup();
-    ImGui::SameLine();
-    ImGui::BeginGroup();
-    if (ImGui::Button("+##posx")) { pos[0] += 0.1f; pos_changed = true; }
-    if (ImGui::Button("+##posy")) { pos[1] += 0.1f; pos_changed = true; }
-    if (ImGui::Button("+##posz")) { pos[2] += 0.1f; pos_changed = true; }
-    ImGui::EndGroup();
-
-    // Rotation
-    ImGui::Text("Rotation (degrees):"); 
-    rot_changed |= ImGui::SliderFloat("Pitch (X)##rot", &rot[0], -180.0f, 180.0f, "%.1f");
-    rot_changed |= ImGui::SliderFloat("Yaw (Y)##rot",   &rot[1], -180.0f, 180.0f, "%.1f");
-    rot_changed |= ImGui::SliderFloat("Roll (Z)##rot",  &rot[2], -180.0f, 180.0f, "%.1f");
-    if (ImGui::IsItemHovered())
+    ImGui::Text("Position offset:");
     {
-        ImGui::SetTooltip("Use CTRL+click for manual input");
+        // X axis
+        ImGui::PushID("PosX");
+        pos_changed |= ImGui::SliderFloat("X", &pos[0], -10.0f, 10.0f, "%.3f");
+        {
+            float btn_width = 30.0f;
+            float spacing = ImGui::GetStyle().ItemSpacing.x;
+            float content_width = ImGui::GetWindowContentRegionWidth();
+            // Position arrows at (content width - desired button group width)
+            float arrow_x = content_width - (2 * btn_width + spacing);
+            ImGui::SameLine(arrow_x);
+            if (ImGui::Button("-##x", ImVec2(btn_width,0))) { pos[0] -= 0.001f; pos_changed = true; }
+            ImGui::SameLine();
+            if(ImGui::Button("+##x", ImVec2(btn_width,0))) { pos[0] += 0.001f; pos_changed = true; }
+        }
+        ImGui::PopID();
+    }
+    {
+        // Y axis
+        ImGui::PushID("PosY");
+        pos_changed |= ImGui::SliderFloat("Y", &pos[1], -10.0f, 10.0f, "%.3f");
+        {
+            float btn_width = 30.0f;
+            float spacing = ImGui::GetStyle().ItemSpacing.x;
+            float content_width = ImGui::GetWindowContentRegionWidth();
+            // Position arrows at (content width - desired button group width)
+            float arrow_x = content_width - (2 * btn_width + spacing);
+            ImGui::SameLine(arrow_x);
+            if (ImGui::Button("-##y", ImVec2(btn_width,0))) { pos[1] -= 0.001f; pos_changed = true; }
+            ImGui::SameLine();
+            if(ImGui::Button("+##y", ImVec2(btn_width,0))) { pos[1] += 0.001f; pos_changed = true; }
+        }
+        ImGui::PopID();
+    }
+    {
+        // Z axis
+        ImGui::PushID("PosZ");
+        pos_changed |= ImGui::SliderFloat("Z", &pos[2], -10.0f, 10.0f, "%.3f");
+        {
+            float btn_width = 30.0f;
+            float spacing = ImGui::GetStyle().ItemSpacing.x;
+            float content_width = ImGui::GetWindowContentRegionWidth();
+            // Position arrows at (content width - desired button group width)
+            float arrow_x = content_width - (2 * btn_width + spacing);
+            ImGui::SameLine(arrow_x);
+            if (ImGui::Button("-##z", ImVec2(btn_width,0))) { pos[2] -= 0.001f; pos_changed = true; }
+            ImGui::SameLine();
+            if(ImGui::Button("+##z", ImVec2(btn_width,0))) { pos[2] += 0.001f; pos_changed = true; }
+        }
+        ImGui::PopID();
     }
 
-    // Fine-tune buttons for rotation
-    ImGui::SameLine();
-    ImGui::BeginGroup();
-    if (ImGui::Button("-##rotx")) { rot[0] -= 1.0f; rot_changed = true; }
-    if (ImGui::Button("-##roty")) { rot[1] -= 1.0f; rot_changed = true; }
-    if (ImGui::Button("-##rotz")) { rot[2] -= 1.0f; rot_changed = true; }
-    ImGui::EndGroup();
-    ImGui::SameLine();
-    ImGui::BeginGroup();
-    if (ImGui::Button("+##rotx")) { rot[0] += 1.0f; rot_changed = true; }
-    if (ImGui::Button("+##roty")) { rot[1] += 1.0f; rot_changed = true; }
-    if (ImGui::Button("+##rotz")) { rot[2] += 1.0f; rot_changed = true; }
-    ImGui::EndGroup();
+    // Rotation
+    ImGui::Text("Rotation (degrees):");
+    {
+        // Pitch (X)
+        ImGui::PushID("RotX");
+        rot_changed |= ImGui::SliderFloat("Pitch (X)", &rot[0], -180.0f, 180.0f, "%.1f");
+        {
+            float btn_width = 30.0f;
+            float spacing = ImGui::GetStyle().ItemSpacing.x;
+            float content_width = ImGui::GetWindowContentRegionWidth();
+            // Position arrows at (content width - desired button group width)
+            float arrow_x = content_width - (2 * btn_width + spacing);
+            ImGui::SameLine(arrow_x);
+            if (ImGui::Button("-##pitch", ImVec2(btn_width,0))) { rot[0] -= 0.001f; rot_changed = true; }
+            ImGui::SameLine();
+            if(ImGui::Button("+##pitch", ImVec2(btn_width,0))) { rot[0] += 0.001f; rot_changed = true; }
+        }
+        ImGui::PopID();
+    }
+    {
+        // Yaw (Y)
+        ImGui::PushID("RotY");
+        rot_changed |= ImGui::SliderFloat("Yaw (Y)", &rot[1], -180.0f, 180.0f, "%.1f");
+        {
+            float btn_width = 30.0f;
+            float spacing = ImGui::GetStyle().ItemSpacing.x;
+            float content_width = ImGui::GetWindowContentRegionWidth();
+            // Position arrows at (content width - desired button group width)
+            float arrow_x = content_width - (2 * btn_width + spacing);
+            ImGui::SameLine(arrow_x);
+            if (ImGui::Button("-##yaw", ImVec2(btn_width,0))) { rot[1] -= 0.001f; rot_changed = true; }
+            ImGui::SameLine();
+            if(ImGui::Button("+##yaw", ImVec2(btn_width,0))) { rot[1] += 0.001f; rot_changed = true; }
+        }
+        ImGui::PopID();
+    }
+    {
+        // Roll (Z)
+        ImGui::PushID("RotZ");
+        rot_changed |= ImGui::SliderFloat("Roll (Z)", &rot[2], -180.0f, 180.0f, "%.1f");
+        {
+            float btn_width = 30.0f;
+            float spacing = ImGui::GetStyle().ItemSpacing.x;
+            float content_width = ImGui::GetWindowContentRegionWidth();
+            // Position arrows at (content width - desired button group width)
+            float arrow_x = content_width - (2 * btn_width + spacing);
+            ImGui::SameLine(arrow_x);
+            if (ImGui::Button("-##roll", ImVec2(btn_width,0))) { rot[2] -= 0.001f; rot_changed = true; }
+            ImGui::SameLine();
+            if(ImGui::Button("+##roll", ImVec2(btn_width,0))) { rot[2] += 0.001f; rot_changed = true; }
+        }
+        ImGui::PopID();
+    }
 
     // Only update if values changed
     if (pos_changed || rot_changed)
