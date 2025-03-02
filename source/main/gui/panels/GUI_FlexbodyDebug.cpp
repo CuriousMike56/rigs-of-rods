@@ -572,17 +572,23 @@ void FlexbodyDebug::DrawOffsetRotationReset(Prop* prop)
 {
     if (ImGui::Button("Reset position & rotation"))
     {
-        // Just restore initial local transform from the prop's original values
-        m_edit_offset = prop->pp_offset;
-
-        // Build initial rotation using same order as original prop parsing:
-        // X (pitch), Y (yaw), Z (roll)  
-        m_edit_rotation = 
-            Ogre::Quaternion(Ogre::Degree(prop->pp_rot.x), Ogre::Vector3::UNIT_X) *
-            Ogre::Quaternion(Ogre::Degree(prop->pp_rot.y), Ogre::Vector3::UNIT_Y) *
-            Ogre::Quaternion(Ogre::Degree(prop->pp_rot.z), Ogre::Vector3::UNIT_Z);
-
-        // Update all visual states
+        // Get prop index in stored vector
+        int propIndex = m_combo_selection - m_combo_props_start; 
+        // Check bounds to avoid crash
+        if(propIndex < 0 || propIndex >= (int)m_prop_initial_offsets.size())
+            m_edit_offset = prop->pp_offset;
+        else
+            m_edit_offset = m_prop_initial_offsets[propIndex];
+            
+        m_edit_rotation = m_element_transforms[m_combo_selection].rotation; // rotation remains as stored
+        
+        // Update element transform for the prop so UI reset reflects new values
+        m_element_transforms[m_combo_selection].offset = m_edit_offset;
+        m_element_transforms[m_combo_selection].rotation = m_edit_rotation;
+        
+        // Also update the prop's stored offset
+        prop->pp_offset = m_edit_offset;
+        // Update prop visual states with the initial offset and rotation
         prop->pp_scene_node->setPosition(m_edit_offset);
         prop->pp_scene_node->setOrientation(m_edit_rotation);
         
@@ -592,7 +598,6 @@ void FlexbodyDebug::DrawOffsetRotationReset(Prop* prop)
             prop->pp_wheel_scene_node->setOrientation(m_edit_rotation);
         }
 
-        // Reset edit state
         m_offset_rot_changed = true;
         m_values_initialized = false; // Force input fields to update
     }
@@ -674,6 +679,13 @@ void FlexbodyDebug::AnalyzeFlexbodies()
 
         if (m_combo_selection == -1)
             m_combo_selection = 0;
+
+        // NEW: Initialize stored initial offsets for props
+        m_prop_initial_offsets.clear();
+        for (Prop const& p : actor->GetGfxActor()->getProps())
+        {
+            m_prop_initial_offsets.push_back(p.pp_offset);
+        }
     }
 
     ImTerminateComboboxString(m_combo_items);
