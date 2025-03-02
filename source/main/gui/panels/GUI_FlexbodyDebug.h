@@ -66,6 +66,9 @@ private:
     };
     std::vector<ElementTransform> m_element_transforms;
 
+    // NEW: Store initial prop offsets for reset
+    std::vector<Ogre::Vector3> m_prop_initial_offsets;
+
     bool m_is_editing = false; // Track if we're currently editing
     Ogre::Vector3 m_initial_local_pos;     // Store initial local position 
     Ogre::Quaternion m_initial_local_rot;  // Store initial local rotation
