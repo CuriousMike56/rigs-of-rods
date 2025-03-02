@@ -58,13 +58,23 @@ private:
     void DrawMeshInfo(Prop* prop);
 
     // For editing offset/rotation
-    Ogre::Vector3 m_edit_offset;     // Cache edited position values
-    Ogre::Quaternion m_edit_rotation;   // Changed from Vector3
-    bool m_offset_rot_changed; // Flag to trigger updates
+    struct ElementTransform
+    {
+        Ogre::Vector3 offset = Ogre::Vector3::ZERO;
+        Ogre::Quaternion rotation = Ogre::Quaternion::IDENTITY;
+        bool initialized = false;
+    };
+    std::vector<ElementTransform> m_element_transforms;
 
     bool m_is_editing = false; // Track if we're currently editing
     Ogre::Vector3 m_initial_local_pos;     // Store initial local position 
     Ogre::Quaternion m_initial_local_rot;  // Store initial local rotation
+
+    // Add these member variables back
+    Ogre::Vector3 m_edit_offset = Ogre::Vector3::ZERO;
+    Ogre::Quaternion m_edit_rotation = Ogre::Quaternion::IDENTITY;
+    bool m_offset_rot_changed = false;
+    bool m_values_initialized = false;
 
     // Display options
     bool draw_mesh_wireframe = false;
@@ -83,7 +93,8 @@ private:
     bool m_is_visible = false;
     bool m_is_hovered = false;
 
-    bool m_values_initialized = false;  // Add this line - for tracking initialization of input fields
+    // For prop rotation editing
+    Ogre::Vector3 m_raw_angles = Ogre::Vector3::ZERO;  // Stores raw Euler angles read from truck file
 };
 
 } // namespace GUI
