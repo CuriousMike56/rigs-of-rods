@@ -109,8 +109,11 @@ void FlareUtil::Draw()
             flare_t& flare = m_actor->ar_flares[m_selected_flare];
             ImGui::BeginGroup();
 
-            // Display type info
+            // Display type and reference nodes
             ImGui::Text(_LC("FlareUtil", "Type: %c"), (char)flare.fl_type);
+            ImGui::Text(_LC("FlareUtil", "Ref node: %d"), flare.noderef);
+            ImGui::Text(_LC("FlareUtil", "Node X: %d"), flare.nodex);
+            ImGui::Text(_LC("FlareUtil", "Node Y: %d"), flare.nodey);
             if (flare.fl_type == FlareType::USER)
             {
                 ImGui::Text(_LC("FlareUtil", "Control number: %d"), flare.controlnumber + 1);
@@ -128,10 +131,19 @@ void FlareUtil::Draw()
                 flare.offsetz = pos[2];
             }
 
-            // Reference nodes
-            ImGui::Text(_LC("FlareUtil", "Reference node: %d"), flare.noderef);
-            ImGui::Text(_LC("FlareUtil", "Node X: %d"), flare.nodex);
-            ImGui::Text(_LC("FlareUtil", "Node Y: %d"), flare.nodey);
+            // Size editor
+            ImGui::Text(_LC("FlareUtil", "Size:"));
+            float size = flare.size;
+            if (ImGui::DragFloat("##size", &size, 0.1f))
+            {
+                flare.size = size;
+            }
+
+            ImGui::Separator();
+
+            // Additional properties
+            //ImGui::Text(_LC("FlareUtil", "Material name: %s"), flare2.material_name.c_str());
+            ImGui::Text(_LC("FlareUtil", "Blink delay: %d ms"), flare.blinkdelay);
 
             ImGui::EndGroup();
         }
