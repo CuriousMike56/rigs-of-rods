@@ -37,6 +37,16 @@ void FlareUtil::SetVisible(bool v)
     if (v)
     {
         m_actor = App::GetGameContext()->GetPlayerActor();
+
+        // Initialize spawn values for the default selection (flare 0)
+        if (m_actor && m_actor->ar_flares.size() > 0)
+        {
+            const flare_t& flare = m_actor->ar_flares[0];
+            m_spawn_values.offset_x = flare.offsetx;
+            m_spawn_values.offset_y = flare.offsety; 
+            m_spawn_values.offset_z = flare.offsetz;
+            m_spawn_values.size = flare.size;
+        }
     }
 }
 
@@ -126,15 +136,57 @@ void FlareUtil::Draw()
 
             ImGui::Separator();
 
-            // Position editor
-            ImGui::Text(_LC("FlareUtil", "Position offset (X, Y, Z):"));
-            float pos[3] = {flare.offsetx, flare.offsety, flare.offsetz};
-            if (ImGui::DragFloat3("##pos", pos, 0.1f))
+            // Position editor with fine adjustment buttons
+            ImGui::Text(_LC("FlareUtil", "Position offset:"));
             {
-                flare.offsetx = pos[0];
-                flare.offsety = pos[1]; 
-                flare.offsetz = pos[2];
+                // X axis
+                ImGui::PushID("PosX");
+                float pos_x = flare.offsetx;
+                bool pos_changed = ImGui::SliderFloat("X", &pos_x, -10.0f, 10.0f, "%.3f");
+                {
+                    float btn_width = 25.0f;
+                    float spacing = ImGui::GetStyle().ItemSpacing.x;
+                    ImGui::SameLine();
+                    if (ImGui::Button("-##x", ImVec2(btn_width,0))) { pos_x -= 0.001f; pos_changed = true; }
+                    ImGui::SameLine();
+                    if(ImGui::Button("+##x", ImVec2(btn_width,0))) { pos_x += 0.001f; pos_changed = true; }
+                }
+                if (pos_changed) { flare.offsetx = pos_x; }
+                ImGui::PopID();
             }
+            {
+                // Y axis  
+                ImGui::PushID("PosY");
+                float pos_y = flare.offsety;
+                bool pos_changed = ImGui::SliderFloat("Y", &pos_y, -10.0f, 10.0f, "%.3f");
+                {
+                    float btn_width = 25.0f;
+                    float spacing = ImGui::GetStyle().ItemSpacing.x;
+                    ImGui::SameLine();
+                    if (ImGui::Button("-##y", ImVec2(btn_width,0))) { pos_y -= 0.001f; pos_changed = true; }
+                    ImGui::SameLine();
+                    if(ImGui::Button("+##y", ImVec2(btn_width,0))) { pos_y += 0.001f; pos_changed = true; }
+                }
+                if (pos_changed) { flare.offsety = pos_y; }
+                ImGui::PopID();
+            }
+            {
+                // Z axis
+                ImGui::PushID("PosZ");
+                float pos_z = flare.offsetz;
+                bool pos_changed = ImGui::SliderFloat("Z", &pos_z, -10.0f, 10.0f, "%.3f");
+                {
+                    float btn_width = 25.0f;
+                    float spacing = ImGui::GetStyle().ItemSpacing.x;
+                    ImGui::SameLine();
+                    if (ImGui::Button("-##z", ImVec2(btn_width,0))) { pos_z -= 0.001f; pos_changed = true; }
+                    ImGui::SameLine();
+                    if(ImGui::Button("+##z", ImVec2(btn_width,0))) { pos_z += 0.001f; pos_changed = true; }
+                }
+                if (pos_changed) { flare.offsetz = pos_z; }
+                ImGui::PopID();
+            }
+            
             if (ImGui::Button(_LC("FlareUtil", "Reset##pos")))
             {
                 flare.offsetx = m_spawn_values.offset_x;
@@ -142,12 +194,20 @@ void FlareUtil::Draw()
                 flare.offsetz = m_spawn_values.offset_z;
             }
 
-            // Size editor
+            // Size editor with fine adjustment buttons
             ImGui::Text(_LC("FlareUtil", "Size:"));
             float size = flare.size;
-            if (ImGui::DragFloat("##size", &size, 0.1f))
+            if (ImGui::SliderFloat("##size", &size, 0.1f, 10.0f, "%.3f"))
             {
                 flare.size = size;
+            }
+            {
+                float btn_width = 25.0f;
+                float spacing = ImGui::GetStyle().ItemSpacing.x;
+                ImGui::SameLine();
+                if (ImGui::Button("-##size", ImVec2(btn_width,0))) { size -= 0.001f; flare.size = size; }
+                ImGui::SameLine();
+                if(ImGui::Button("+##size", ImVec2(btn_width,0))) { size += 0.001f; flare.size = size; }
             }
             if (ImGui::Button(_LC("FlareUtil", "Reset##size")))
             {
