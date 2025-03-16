@@ -97,6 +97,11 @@ void FlareUtil::Draw()
             if (ImGui::Selectable(label, m_selected_flare == i))
             {
                 m_selected_flare = i;
+                // Store original values when selecting new flare
+                m_spawn_values.offset_x = flare.offsetx;
+                m_spawn_values.offset_y = flare.offsety;
+                m_spawn_values.offset_z = flare.offsetz;
+                m_spawn_values.size = flare.size;
             }
         }
         ImGui::EndChild();
@@ -122,13 +127,19 @@ void FlareUtil::Draw()
             ImGui::Separator();
 
             // Position editor
-            ImGui::Text(_LC("FlareUtil", "Position offset:"));
+            ImGui::Text(_LC("FlareUtil", "Position offset (X, Y, Z):"));
             float pos[3] = {flare.offsetx, flare.offsety, flare.offsetz};
             if (ImGui::DragFloat3("##pos", pos, 0.1f))
             {
                 flare.offsetx = pos[0];
                 flare.offsety = pos[1]; 
                 flare.offsetz = pos[2];
+            }
+            if (ImGui::Button(_LC("FlareUtil", "Reset##pos")))
+            {
+                flare.offsetx = m_spawn_values.offset_x;
+                flare.offsety = m_spawn_values.offset_y;
+                flare.offsetz = m_spawn_values.offset_z;
             }
 
             // Size editor
@@ -137,6 +148,10 @@ void FlareUtil::Draw()
             if (ImGui::DragFloat("##size", &size, 0.1f))
             {
                 flare.size = size;
+            }
+            if (ImGui::Button(_LC("FlareUtil", "Reset##size")))
+            {
+                flare.size = m_spawn_values.size;
             }
 
             ImGui::Separator();

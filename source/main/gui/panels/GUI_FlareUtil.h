@@ -41,6 +41,16 @@ private:
     bool m_is_hovered = false;
     ActorPtr m_actor;
     unsigned int m_selected_flare = 0;
+
+    // Store original values
+    struct OriginalValues 
+    {
+        float offset_x = 0.f;
+        float offset_y = 0.f;
+        float offset_z = 0.f;
+        float size = 1.f;
+    };
+    OriginalValues m_spawn_values;
 };
 
 } // namespace GUI
