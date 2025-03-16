@@ -1,6 +1,7 @@
 /*
-    This source file is part of Rigs of Rods
+    This source file is part of Rigs of Rods (CM fork)
     Copyright 2022 Petr Ohlidal
+    Copyright 2025 CuriousMike ft. GitHub Copilot
 
     For more information, see http://www.rigsofrods.org/
 

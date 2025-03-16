@@ -135,7 +135,8 @@ bool GUIManager::AreStaticMenusAllowed() //!< i.e. top menubar / vehicle UI butt
             !this->CollisionsDebug.IsHovered() &&
             !this->MainSelector.IsHovered() &&
             !this->SurveyMap.IsHovered() &&
-            !this->FlexbodyDebug.IsHovered());
+            !this->FlexbodyDebug.IsHovered() &&
+            !this->FlareUtil.IsHovered());
 }
 
 void GUIManager::ApplyUiPreset() //!< reads cvar 'ui_preset'
@@ -181,6 +182,11 @@ void GUIManager::DrawSimulationGui(float dt)
     if (this->FlexbodyDebug.IsVisible())
     {
         this->FlexbodyDebug.Draw();
+    }
+
+    if (this->FlareUtil.IsVisible())
+    {
+        this->FlareUtil.Draw();
     }
 };
 

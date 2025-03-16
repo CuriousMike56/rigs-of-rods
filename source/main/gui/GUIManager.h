@@ -33,6 +33,7 @@
 #include "GUI_CollisionsDebug.h"
 #include "GUI_ConsoleWindow.h"
 #include "GUI_FlexbodyDebug.h"
+#include "GUI_FlareUtil.h"
 #include "GUI_FrictionSettings.h"
 #include "GUI_RepositorySelector.h"
 #include "GUI_GameMainMenu.h"
@@ -123,6 +124,7 @@ public:
     GUI::GameChatBox            ChatBox;
     GUI::MpClientList           MpClientList;
     GUI::FrictionSettings       FrictionSettings;
+    GUI::FlareUtil              FlareUtil;
     GUI::TextureToolWindow      TextureToolWindow;
     GUI::GameControls           GameControls;
     GUI::RepositorySelector     RepositorySelector;

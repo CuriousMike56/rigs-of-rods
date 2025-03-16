@@ -735,6 +735,12 @@ void TopMenubar::Draw(float dt)
                     App::GetGuiManager()->FlexbodyDebug.SetVisible(true);
                     m_open_menu = TopMenu::TOPMENU_NONE;
                 }
+
+                if (ImGui::Button(_LC("TopMenubar", "Flare utility")))
+                {
+                    App::GetGuiManager()->FlareUtil.SetVisible(true);
+                    m_open_menu = TopMenu::TOPMENU_NONE;
+                }
             }
 
             if (ImGui::Button(_LC("TopMenubar", "Browse gadgets ...")))
