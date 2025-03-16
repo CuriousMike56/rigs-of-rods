@@ -42,7 +42,17 @@ void FlareUtil::SetVisible(bool v)
 
 void FlareUtil::Draw()
 {
-    if (!m_is_visible || !m_actor)
+    // Get current vehicle
+    ActorPtr current_actor = App::GetGameContext()->GetPlayerActor();
+    
+    // Reset selection if vehicle changed
+    if (current_actor != m_actor)
+    {
+        m_actor = current_actor;
+        m_selected_flare = -1;
+    }
+
+    if (!m_is_visible)
         return;
 
     ImGui::SetNextWindowSize(ImVec2(500.0f, 400.0f), ImGuiCond_FirstUseEver);
@@ -50,6 +60,13 @@ void FlareUtil::Draw()
 
     if (ImGui::Begin(_LC("FlareUtil", "Flare Utility"), &m_is_visible))
     {
+        if (!m_actor)
+        {
+            ImGui::Text("%s", _LC("FlareUtil", "You are on foot."));
+            ImGui::End();
+            return;
+        }
+
         // Vehicle info
         ImGui::Text("%s", m_actor->ar_design_name.c_str());
         ImGui::Separator();
