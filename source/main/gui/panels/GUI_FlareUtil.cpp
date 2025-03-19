@@ -125,7 +125,7 @@ void FlareUtil::Draw()
             ImGui::BeginGroup();
 
             // Display type and reference nodes
-            ImGui::Text(_LC("FlareUtil", "Type: %c"), (char)flare.fl_type);
+            ImGui::Text(_LC("FlareUtil", "Type: %c (%s)"), (char)flare.fl_type, GetFlareTypeDesc(flare.fl_type));
             ImGui::Text(_LC("FlareUtil", "Ref node: %d"), flare.noderef);
             ImGui::Text(_LC("FlareUtil", "Node X: %d"), flare.nodex);
             ImGui::Text(_LC("FlareUtil", "Node Y: %d"), flare.nodey);
@@ -224,4 +224,23 @@ void FlareUtil::Draw()
         }
     }
     ImGui::End();
+}
+
+const char* FlareUtil::GetFlareTypeDesc(FlareType type)
+{
+    switch (type)
+    {
+    case FlareType::HEADLIGHT:    return "low beam";
+    case FlareType::HIGH_BEAM:     return "high beam";
+    case FlareType::SIDELIGHT:    return "sidelight";
+    case FlareType::FOG_LIGHT:     return "fog light";
+    case FlareType::BRAKE_LIGHT:        return "brake light";
+    case FlareType::TAIL_LIGHT:    return "tail light";
+    case FlareType::BLINKER_LEFT: return "left blinker";
+    case FlareType::BLINKER_RIGHT:return "right blinker";
+    case FlareType::REVERSE_LIGHT:      return "reverse light";
+    case FlareType::DASHBOARD:    return "dashboard";
+    case FlareType::USER:         return "user controlled";
+    default:                      return "unknown";
+    }
 }

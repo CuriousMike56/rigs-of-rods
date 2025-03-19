@@ -37,6 +37,8 @@ public:
     void Draw();
 
 private:
+    const char* GetFlareTypeDesc(FlareType type);
+    
     bool m_is_visible = false;
     bool m_is_hovered = false;
     ActorPtr m_actor;
