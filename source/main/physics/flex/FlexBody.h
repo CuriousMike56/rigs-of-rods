@@ -128,6 +128,8 @@ public:
     Ogre::Vector3 GetInitialOffset() const { return m_center_offset; }
     Ogre::Quaternion GetInitialRotation() const { return m_initial_rotation; }
 
+    bool isValid() const { return (m_scene_node != nullptr); }
+
 private:
 
     void defragmentFlexbodyMesh();

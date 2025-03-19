@@ -688,9 +688,20 @@ void FlexBody::reset()
         writeBlend();
     }
 
+    // Add safety check for null scene node
+    if (!m_scene_node)
+    {
+        return;
+    }
+
     // Reset to initial position
     m_scene_node->setPosition(m_initial_pos);
-    m_scene_node->setOrientation(m_initial_rot);
+    
+    // Safety check for initial rotation
+    if (m_initial_rot != Ogre::Quaternion::ZERO)
+    {
+        m_scene_node->setOrientation(m_initial_rot);
+    }
 }
 
 void FlexBody::writeBlend()
