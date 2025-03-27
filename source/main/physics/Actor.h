@@ -504,6 +504,11 @@ public:
     bool ar_toggle_ties:1;      //!< Sim state
     bool ar_cparticles_active:1;//!< Gfx state
 
+    std::vector<VideoCamera*> ar_videocameras;
+
+    // Expose videocameras as public member for editor access
+    std::vector<struct VideoCamera*>& GetVideoCameras() { return ar_videocameras; }
+
 private:
 
     bool              CalcForcesEulerPrepare(bool doUpdate); 

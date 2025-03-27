@@ -741,6 +741,12 @@ void TopMenubar::Draw(float dt)
                     App::GetGuiManager()->FlareUtil.SetVisible(true);
                     m_open_menu = TopMenu::TOPMENU_NONE;
                 }
+
+                if (ImGui::Button(_LC("TopMenubar", "Videocamera utility")))
+                {
+                    App::GetGuiManager()->VidcamUtil.SetVisible(true);
+                    m_open_menu = TopMenu::TOPMENU_NONE;
+                }
             }
 
             if (ImGui::Button(_LC("TopMenubar", "Browse gadgets ...")))
