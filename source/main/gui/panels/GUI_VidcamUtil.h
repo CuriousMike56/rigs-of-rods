@@ -37,7 +37,7 @@ public:
     void Draw();
 
 private:
-    void DrawVideoCamera(VideoCamera* vcam);
+    void DrawVideoCamera(const VideoCamera* vcam);
     const char* GetVideoCamRoleStr(VideoCamRole role);
 
     bool m_is_visible = false;

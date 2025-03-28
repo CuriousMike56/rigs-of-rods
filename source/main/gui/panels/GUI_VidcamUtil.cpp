@@ -42,15 +42,18 @@ void VidcamUtil::SetVisible(bool v)
         m_orig_state.clear();
 
         // Store initial states of all cameras
-        if (m_actor && !m_actor->ar_videocameras.empty())
+        if (m_actor)
         {
-            for (int i = 0; i < m_actor->ar_videocameras.size(); i++)
+            const std::vector<VideoCamera>& vcams = m_actor->GetGfxActor()->getVideoCameras();
+            if (!vcams.empty())
             {
-                VideoCamera* vcam = m_actor->ar_videocameras[i];
-                VideoCamState state;
-                state.pos_offset = vcam->vcam_pos_offset;
-                state.rotation = vcam->vcam_rotation;
-                m_orig_state[i] = state;
+                for (int i = 0; i < vcams.size(); i++)
+                {
+                    VideoCamState state;
+                    state.pos_offset = vcams[i].vcam_pos_offset;
+                    state.rotation = vcams[i].vcam_rotation;
+                    m_orig_state[i] = state;
+                }
             }
         }
     }
@@ -58,6 +61,19 @@ void VidcamUtil::SetVisible(bool v)
 
 void VidcamUtil::Draw()
 {
+
+    // Get current vehicle
+    ActorPtr current_actor = App::GetGameContext()->GetPlayerActor();
+    
+    // Reset selection if vehicle changed
+    if (current_actor != m_actor)
+    {
+        m_actor = current_actor;
+        m_selected_videocam = -1;
+    }
+
+    if (!m_is_visible)
+        return;
 
     ImGui::SetNextWindowSize(ImVec2(500.0f, 400.0f), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
@@ -75,15 +91,16 @@ void VidcamUtil::Draw()
         ImGui::Text("%s", m_actor->ar_design_name.c_str());
         ImGui::Separator();
 
+        const std::vector<VideoCamera>& vcams = m_actor->GetGfxActor()->getVideoCameras();
+
         // Camera list
-        ImGui::Text(_LC("VidcamUtil", "Cameras: %d"), m_actor->ar_videocameras.size());
+        ImGui::Text(_LC("VidcamUtil", "Cameras: %d"), vcams.size());
 
         ImGui::BeginChild("camera_list", ImVec2(200, 0), true);
-        for (int i = 0; i < m_actor->ar_videocameras.size(); i++)
+        for (int i = 0; i < vcams.size(); i++)
         {
-            VideoCamera* vcam = m_actor->ar_videocameras[i];
             char label[128];
-            snprintf(label, 128, "[%d] %s", i, GetVideoCamRoleStr(vcam->vcam_role));
+            snprintf(label, 128, "[%d] %s", i, GetVideoCamRoleStr(vcams[i].vcam_role));
 
             if (ImGui::Selectable(label, m_selected_videocam == i))
             {
@@ -95,38 +112,41 @@ void VidcamUtil::Draw()
         ImGui::SameLine();
 
         // Camera properties
-        if (m_selected_videocam >= 0 && m_selected_videocam < m_actor->ar_videocameras.size())
+        if (m_selected_videocam >= 0 && m_selected_videocam < vcams.size())
         {
-            DrawVideoCamera(m_actor->ar_videocameras[m_selected_videocam]);
+            DrawVideoCamera(&vcams[m_selected_videocam]);
         }
     }
     ImGui::End();
 }
 
-void VidcamUtil::DrawVideoCamera(VideoCamera* vcam)
+void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
 {
     ImGui::BeginGroup();
 
     // Display basic info
     ImGui::Text(_LC("VidcamUtil", "Role: %s"), GetVideoCamRoleStr(vcam->vcam_role));
-    ImGui::Text(_LC("VidcamUtil", "Material: %s"), vcam->vcam_material->getName().c_str());
+    ImGui::Text(_LC("VidcamUtil", "Material: %s"), vcam->vcam_mat_name_orig.c_str());
     ImGui::Text(_LC("VidcamUtil", "Offline texture: %s"), vcam->vcam_off_tex_name.c_str());
 
     ImGui::Separator();
 
-    // Position offset editor
+    // Position offset editor - we can't modify const object directly
     ImGui::Text(_LC("VidcamUtil", "Position offset:"));
     {
         float offset[3] = { vcam->vcam_pos_offset.x, vcam->vcam_pos_offset.y, vcam->vcam_pos_offset.z };
         if (ImGui::DragFloat3("##offset", offset, 0.01f))
         {
-            vcam->vcam_pos_offset = Ogre::Vector3(offset[0], offset[1], offset[2]);
+            // Need to modify through the original vector
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_pos_offset = Ogre::Vector3(offset[0], offset[1], offset[2]);
         }
 
         ImGui::SameLine();
         if (ImGui::Button(_LC("VidcamUtil", "Reset##offset")))
         {
-            vcam->vcam_pos_offset = m_orig_state[m_selected_videocam].pos_offset;
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_pos_offset = m_orig_state[m_selected_videocam].pos_offset;
         }
     }
 
@@ -156,13 +176,16 @@ void VidcamUtil::DrawVideoCamera(VideoCamera* vcam)
                 Ogre::Radian(Ogre::Degree(rotation[1])),
                 Ogre::Radian(Ogre::Degree(rotation[2])));
 
-            vcam->vcam_rotation.FromRotationMatrix(newMat);
+            // Need to modify through the original vector
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_rotation.FromRotationMatrix(newMat);
         }
 
         ImGui::SameLine();
         if (ImGui::Button(_LC("VidcamUtil", "Reset##rotation")))
         {
-            vcam->vcam_rotation = m_orig_state[m_selected_videocam].rotation;
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_rotation = m_orig_state[m_selected_videocam].rotation;
         }
     }
 
