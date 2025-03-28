@@ -125,6 +125,17 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     ImGui::BeginGroup();
 
     // Display basic info
+    ImGui::Text(_LC("VidcamUtil", "Center node: %d"), vcam->vcam_node_center);
+    ImGui::Text(_LC("VidcamUtil", "Direction Y node: %d"), vcam->vcam_node_dir_y);
+    ImGui::Text(_LC("VidcamUtil", "Direction Z node: %d"), vcam->vcam_node_dir_z);
+    if (vcam->vcam_node_alt_pos != NODENUM_INVALID)
+    {
+        ImGui::Text(_LC("VidcamUtil", "Alternative position node: %d"), vcam->vcam_node_alt_pos);
+    }
+    if (vcam->vcam_node_lookat != NODENUM_INVALID)
+    {
+        ImGui::Text(_LC("VidcamUtil", "Look-at node: %d"), vcam->vcam_node_lookat);
+    }
     ImGui::Text(_LC("VidcamUtil", "Role: %s"), GetVideoCamRoleStr(vcam->vcam_role));
     ImGui::Text(_LC("VidcamUtil", "Material: %s"), vcam->vcam_mat_name_orig.c_str());
     ImGui::Text(_LC("VidcamUtil", "Offline texture: %s"), vcam->vcam_off_tex_name.c_str());
