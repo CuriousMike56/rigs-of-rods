@@ -78,7 +78,7 @@ void VidcamUtil::Draw()
     ImGui::SetNextWindowSize(ImVec2(500.0f, 400.0f), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
 
-    if (ImGui::Begin(_LC("VidcamUtil", "Videocamera Utility"), &m_is_visible))
+    if (ImGui::Begin(_LC("VidcamUtil", "VideoCamera Utility"), &m_is_visible))
     {
         if (!m_actor)
         {
@@ -93,8 +93,8 @@ void VidcamUtil::Draw()
 
         const std::vector<VideoCamera>& vcams = m_actor->GetGfxActor()->getVideoCameras();
 
-        // Camera list
-        ImGui::Text(_LC("VidcamUtil", "Cameras: %d"), vcams.size());
+        // VideoCamera list
+        ImGui::Text(_LC("VidcamUtil", "VideoCameras: %d"), vcams.size());
 
         ImGui::BeginChild("camera_list", ImVec2(200, 0), true);
         for (int i = 0; i < vcams.size(); i++)
@@ -131,62 +131,103 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
 
     ImGui::Separator();
 
-    // Position offset editor - we can't modify const object directly
+    // Position offset editor with fine adjustment buttons
     ImGui::Text(_LC("VidcamUtil", "Position offset:"));
+    float offset[3] = { vcam->vcam_pos_offset.x, vcam->vcam_pos_offset.y, vcam->vcam_pos_offset.z };
+    bool pos_changed = false;
+    
+    const char* axes[] = {"X", "Y", "Z"};
+    for (int i = 0; i < 3; i++)
     {
-        float offset[3] = { vcam->vcam_pos_offset.x, vcam->vcam_pos_offset.y, vcam->vcam_pos_offset.z };
-        if (ImGui::DragFloat3("##offset", offset, 0.01f))
+        ImGui::PushID(axes[i]);
+        if (ImGui::SliderFloat(axes[i], &offset[i], -10.0f, 10.0f, "%.3f"))
         {
-            // Need to modify through the original vector
-            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
-            vcams[m_selected_videocam].vcam_pos_offset = Ogre::Vector3(offset[0], offset[1], offset[2]);
+            pos_changed = true;
         }
-
+        
+        float btn_width = 25.0f;
         ImGui::SameLine();
-        if (ImGui::Button(_LC("VidcamUtil", "Reset##offset")))
-        {
-            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
-            vcams[m_selected_videocam].vcam_pos_offset = m_orig_state[m_selected_videocam].pos_offset;
+        if (ImGui::Button("-", ImVec2(btn_width,0))) 
+        { 
+            offset[i] -= 0.001f; 
+            pos_changed = true; 
         }
+        ImGui::SameLine();
+        if(ImGui::Button("+", ImVec2(btn_width,0))) 
+        { 
+            offset[i] += 0.001f; 
+            pos_changed = true; 
+        }
+        ImGui::PopID();
     }
 
-    // Rotation editor (as Euler angles)
-    ImGui::Text(_LC("VidcamUtil", "Rotation (degrees):"));
+    if (pos_changed)
     {
-        // Create and get rotation matrix
-        Ogre::Matrix3 mat;
-        vcam->vcam_rotation.ToRotationMatrix(mat);
+        std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+        vcams[m_selected_videocam].vcam_pos_offset = Ogre::Vector3(offset[0], offset[1], offset[2]);
+    }
 
-        // Get euler angles
-        Ogre::Radian pitch, yaw, roll;
-        mat.ToEulerAnglesXYZ(pitch, yaw, roll);
-                             
-        float rotation[3] = {
-            pitch.valueDegrees(),
-            yaw.valueDegrees(),
-            roll.valueDegrees()
-        };
-                             
-        if (ImGui::DragFloat3("##rotation", rotation, 0.1f))
+    if (ImGui::Button(_LC("VidcamUtil", "Reset##offset")))
+    {
+        std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+        vcams[m_selected_videocam].vcam_pos_offset = m_orig_state[m_selected_videocam].pos_offset;
+    }
+
+    // Rotation editor with fine adjustment buttons
+    ImGui::Text(_LC("VidcamUtil", "Rotation (degrees):"));
+    Ogre::Matrix3 mat;
+    vcam->vcam_rotation.ToRotationMatrix(mat);
+    Ogre::Radian pitch, yaw, roll;
+    mat.ToEulerAnglesXYZ(pitch, yaw, roll);
+    
+    float rotation[3] = {
+        pitch.valueDegrees(),
+        yaw.valueDegrees(),
+        roll.valueDegrees()
+    };
+    bool rot_changed = false;
+
+    const char* rot_axes[] = {"Pitch", "Yaw", "Roll"};
+    for (int i = 0; i < 3; i++)
+    {
+        ImGui::PushID(rot_axes[i]);
+        if (ImGui::SliderFloat(rot_axes[i], &rotation[i], -180.0f, 180.0f, "%.1f"))
         {
-            // Convert back to quaternion
-            Ogre::Matrix3 newMat;
-            newMat.FromEulerAnglesXYZ(
-                Ogre::Radian(Ogre::Degree(rotation[0])),
-                Ogre::Radian(Ogre::Degree(rotation[1])),
-                Ogre::Radian(Ogre::Degree(rotation[2])));
-
-            // Need to modify through the original vector
-            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
-            vcams[m_selected_videocam].vcam_rotation.FromRotationMatrix(newMat);
+            rot_changed = true;
         }
-
+        
+        float btn_width = 25.0f;
         ImGui::SameLine();
-        if (ImGui::Button(_LC("VidcamUtil", "Reset##rotation")))
-        {
-            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
-            vcams[m_selected_videocam].vcam_rotation = m_orig_state[m_selected_videocam].rotation;
+        if (ImGui::Button("-", ImVec2(btn_width,0))) 
+        { 
+            rotation[i] -= 0.1f; 
+            rot_changed = true; 
         }
+        ImGui::SameLine();
+        if(ImGui::Button("+", ImVec2(btn_width,0))) 
+        { 
+            rotation[i] += 0.1f; 
+            rot_changed = true; 
+        }
+        ImGui::PopID();
+    }
+
+    if (rot_changed)
+    {
+        Ogre::Matrix3 newMat;
+        newMat.FromEulerAnglesXYZ(
+            Ogre::Radian(Ogre::Degree(rotation[0])),
+            Ogre::Radian(Ogre::Degree(rotation[1])),
+            Ogre::Radian(Ogre::Degree(rotation[2])));
+
+        std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+        vcams[m_selected_videocam].vcam_rotation.FromRotationMatrix(newMat);
+    }
+    
+    if (ImGui::Button(_LC("VidcamUtil", "Reset##rotation")))
+    {
+        std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+        vcams[m_selected_videocam].vcam_rotation = m_orig_state[m_selected_videocam].rotation;
     }
 
     ImGui::EndGroup();

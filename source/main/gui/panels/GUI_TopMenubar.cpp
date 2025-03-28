@@ -742,7 +742,7 @@ void TopMenubar::Draw(float dt)
                     m_open_menu = TopMenu::TOPMENU_NONE;
                 }
 
-                if (ImGui::Button(_LC("TopMenubar", "Videocamera utility")))
+                if (ImGui::Button(_LC("TopMenubar", "VideoCamera utility")))
                 {
                     App::GetGuiManager()->VidcamUtil.SetVisible(true);
                     m_open_menu = TopMenu::TOPMENU_NONE;
