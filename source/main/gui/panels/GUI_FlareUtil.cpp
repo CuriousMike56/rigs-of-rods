@@ -218,7 +218,7 @@ void FlareUtil::Draw()
 
             // Additional properties
             //ImGui::Text(_LC("FlareUtil", "Material name: %s"), flare2.material_name.c_str());
-            ImGui::Text(_LC("FlareUtil", "Blink delay: %d ms"), flare.blinkdelay);
+            ImGui::Text(_LC("FlareUtil", "Blink delay: %d ms"), flare.blinkdelay > 0 ? (int)(flare.blinkdelay * 1000) : 0);
 
             ImGui::EndGroup();
         }
