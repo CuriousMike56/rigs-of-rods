@@ -24,6 +24,8 @@
 
 #include "Actor.h"
 #include "Application.h"
+#include "ForwardDeclarations.h"
+#include "GfxActor.h"
 
 namespace RoR {
 namespace GUI {
@@ -39,9 +41,11 @@ public:
 private:
     void DrawVideoCamera(const VideoCamera* vcam);
     const char* GetVideoCamRoleStr(VideoCamRole role);
+    void DrawDebugView(const VideoCamera* vcam);
 
     bool m_is_visible = false;
     bool m_is_hovered = false;
+    bool m_show_base_nodes = false;
     ActorPtr m_actor;
     int m_selected_videocam = -1;
 

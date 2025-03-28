@@ -24,6 +24,8 @@
 
 #include "Actor.h"
 #include "Application.h"
+#include "ForwardDeclarations.h"
+#include "GfxActor.h"
 
 namespace RoR {
 namespace GUI {
@@ -38,9 +40,11 @@ public:
 
 private:
     const char* GetFlareTypeDesc(FlareType type);
+    void DrawDebugView(const flare_t* flare);
     
     bool m_is_visible = false;
     bool m_is_hovered = false;
+    bool m_show_base_nodes = false;
     ActorPtr m_actor;
     unsigned int m_selected_flare = 0;
 

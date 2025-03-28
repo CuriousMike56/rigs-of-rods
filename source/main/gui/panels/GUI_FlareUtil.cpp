@@ -24,16 +24,35 @@
 
 #include "Actor.h"
 #include "ActorManager.h"
+#include "CameraManager.h"
 #include "GameContext.h"
 #include "GUIManager.h"
+#include "GUIUtils.h"
 #include "Language.h"
+#include "OgreCamera.h" 
+#include "GfxActor.h" 
+#include "Utils.h"
 
 using namespace RoR;
 using namespace GUI;
 
+namespace {
+    const ImU32 BASENODE_COLOR(0xff44a5ff); // ABGR format
+    const float BASENODE_RADIUS(3.f);
+    const float BEAM_THICKNESS(1.2f);
+    const float BLUE_BEAM_THICKNESS = BEAM_THICKNESS + 0.8f;
+    const ImU32 NODE_TEXT_COLOR(0xffcccccf);
+    const ImVec4 AXIS_Y_BEAM_COLOR_V4(0.15f, 0.15f, 1.f, 1.f);
+    const ImVec4 AXIS_Z_BEAM_COLOR_V4(0.f, 1.f, 0.f, 1.f);
+    const ImU32 AXIS_Y_BEAM_COLOR = ImColor(AXIS_Y_BEAM_COLOR_V4);
+    const ImU32 AXIS_Z_BEAM_COLOR = ImColor(AXIS_Z_BEAM_COLOR_V4);
+}
+
+
 void FlareUtil::SetVisible(bool v)
 {
     m_is_visible = v;
+    m_show_base_nodes = false; // Reset debug view when window is opened/closed
     if (v)
     {
         m_actor = App::GetGameContext()->GetPlayerActor();
@@ -129,6 +148,7 @@ void FlareUtil::Draw()
             ImGui::Text(_LC("FlareUtil", "Ref node: %d"), flare.noderef);
             ImGui::Text(_LC("FlareUtil", "Node X: %d"), flare.nodex);
             ImGui::Text(_LC("FlareUtil", "Node Y: %d"), flare.nodey);
+            ImGui::Checkbox("Show##base", &m_show_base_nodes);
             if (flare.fl_type == FlareType::USER)
             {
                 ImGui::Text(_LC("FlareUtil", "Control number: %d"), flare.controlnumber + 1);
@@ -224,6 +244,57 @@ void FlareUtil::Draw()
         }
     }
     ImGui::End();
+
+    if (m_show_base_nodes && m_selected_flare < m_actor->ar_flares.size())
+    {
+        DrawDebugView(&m_actor->ar_flares[m_selected_flare]);
+    }
+}
+
+void FlareUtil::DrawDebugView(const flare_t* flare)
+{
+    NodeSB* nodes = m_actor->GetGfxActor()->GetSimNodeBuffer();
+
+    // Setup world to screen conversion
+    ImVec2 screen_size = ImGui::GetIO().DisplaySize;
+    World2ScreenConverter world2screen(
+        App::GetCameraManager()->GetCamera()->getViewMatrix(true), 
+        App::GetCameraManager()->GetCamera()->getProjectionMatrix(), 
+        Ogre::Vector2(screen_size.x, screen_size.y));
+
+    ImDrawList* drawlist = GetImDummyFullscreenWindow();
+
+    const int LAYER_BEAMS = 0;
+    const int LAYER_NODES = 1;
+    const int LAYER_TEXT = 2;
+    drawlist->ChannelsSplit(3);
+
+    // Get node positions
+    Ogre::Vector3 ref_pos = world2screen.Convert(nodes[flare->noderef].AbsPosition);
+    Ogre::Vector3 x_pos = world2screen.Convert(nodes[flare->nodex].AbsPosition);
+    Ogre::Vector3 y_pos = world2screen.Convert(nodes[flare->nodey].AbsPosition);
+
+    // Draw nodes
+    drawlist->ChannelsSetCurrent(LAYER_NODES);
+    if (ref_pos.z < 0.f) { drawlist->AddCircleFilled(ImVec2(ref_pos.x, ref_pos.y), BASENODE_RADIUS, BASENODE_COLOR); }
+    if (x_pos.z < 0.f) { drawlist->AddCircleFilled(ImVec2(x_pos.x, x_pos.y), BASENODE_RADIUS, BASENODE_COLOR); }
+    if (y_pos.z < 0.f) { drawlist->AddCircleFilled(ImVec2(y_pos.x, y_pos.y), BASENODE_RADIUS, BASENODE_COLOR); }
+
+    // Draw connection beams
+    drawlist->ChannelsSetCurrent(LAYER_BEAMS);
+    if (ref_pos.z < 0.f)
+    {
+        if (x_pos.z < 0.f) { drawlist->AddLine(ImVec2(ref_pos.x, ref_pos.y), ImVec2(x_pos.x, x_pos.y), AXIS_Y_BEAM_COLOR, BLUE_BEAM_THICKNESS); }
+        if (y_pos.z < 0.f) { drawlist->AddLine(ImVec2(ref_pos.x, ref_pos.y), ImVec2(y_pos.x, y_pos.y), AXIS_Z_BEAM_COLOR, BEAM_THICKNESS); }
+    }
+
+    // Draw node numbers
+    drawlist->ChannelsSetCurrent(LAYER_TEXT);
+    drawlist->AddText(ImVec2(ref_pos.x, ref_pos.y), NODE_TEXT_COLOR, fmt::format("{}", flare->noderef).c_str());
+    drawlist->AddText(ImVec2(x_pos.x, x_pos.y), NODE_TEXT_COLOR, fmt::format("{}", flare->nodex).c_str());
+    drawlist->AddText(ImVec2(y_pos.x, y_pos.y), NODE_TEXT_COLOR, fmt::format("{}", flare->nodey).c_str());
+
+    drawlist->ChannelsMerge();
 }
 
 const char* FlareUtil::GetFlareTypeDesc(FlareType type)
