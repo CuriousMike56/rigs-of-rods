@@ -81,6 +81,15 @@ void VidcamUtil::SetVisible(bool v)
                     state.node_alt_pos = vcams[i].vcam_node_alt_pos;
                     state.node_lookat = vcams[i].vcam_node_lookat;
                     m_orig_state[i] = state;
+
+                    // Log original rotation
+                    Ogre::Matrix3 mat;
+                    state.rotation.ToRotationMatrix(mat);
+                    Ogre::Radian pitch, yaw, roll;
+                    mat.ToEulerAnglesXYZ(pitch, yaw, roll);
+                    
+                    LOG(fmt::format("[Debug] Camera {}: Original rotation at spawn (Pitch, Yaw, Roll): ({:.2f}, {:.2f}, {:.2f})",
+                        i, pitch.valueDegrees(), yaw.valueDegrees(), roll.valueDegrees()));
                 }
             }
         }
@@ -362,9 +371,9 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     mat.ToEulerAnglesXYZ(pitch, yaw, roll);
     
     float rotation[3] = {
-        pitch.valueDegrees(),
-        yaw.valueDegrees(),
-        roll.valueDegrees()
+        std::fmod(pitch.valueDegrees() + 180.0f, 360.0f) - 180.0f,  // Normalize to -180..+180
+        std::fmod(yaw.valueDegrees() + 180.0f, 360.0f) - 180.0f,
+        std::fmod(roll.valueDegrees() + 180.0f, 360.0f) - 180.0f
     };
     bool rot_changed = false;
 
@@ -373,9 +382,19 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     {
         ImGui::PushID(rot_axes[i]);
         ImGui::PushItemWidth(w);
+
+        float prev_value = rotation[i];
         if (ImGui::SliderFloat(rot_axes[i], &rotation[i], -180.0f, 180.0f, "%.1f"))
         {
-            rot_changed = true;
+            // Validate the change
+            if (rotation[i] <= -180.f) rotation[i] = -180.f;
+            if (rotation[i] >= 180.f) rotation[i] = 180.f;
+            
+            // Only mark as changed if value actually changed
+            if (rotation[i] != prev_value)
+            {
+                rot_changed = true;
+            }
         }
         ImGui::PopItemWidth();
         
@@ -383,28 +402,61 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         ImGui::SameLine();
         if (ImGui::Button("-", ImVec2(btn_width,0))) 
         { 
-            rotation[i] -= 0.1f; 
-            rot_changed = true; 
+            rotation[i] = std::max(-180.f, rotation[i] - 0.1f);
+            rot_changed = true;
         }
         ImGui::SameLine();
         if(ImGui::Button("+", ImVec2(btn_width,0))) 
         { 
-            rotation[i] += 0.1f; 
-            rot_changed = true; 
+            rotation[i] = std::min(180.f, rotation[i] + 0.1f);
+            rot_changed = true;
         }
         ImGui::PopID();
     }
 
     if (rot_changed)
     {
-        Ogre::Matrix3 newMat;
-        newMat.FromEulerAnglesXYZ(
-            Ogre::Radian(Ogre::Degree(rotation[0])),
-            Ogre::Radian(Ogre::Degree(rotation[1])),
-            Ogre::Radian(Ogre::Degree(rotation[2])));
+        // Safety check - validate all values are in proper range
+        bool valid = true;
+        for (int i = 0; i < 3; i++)
+        {
+            if (std::isnan(rotation[i]) || rotation[i] < -180.f || rotation[i] > 180.f)
+            {
+                valid = false;
+                break;
+            }
+        }
 
-        std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
-        vcams[m_selected_videocam].vcam_rotation.FromRotationMatrix(newMat);
+        if (valid)
+        {
+            Ogre::Matrix3 newMat;
+            newMat.FromEulerAnglesXYZ(
+                Ogre::Radian(Ogre::Degree(rotation[0])),
+                Ogre::Radian(Ogre::Degree(rotation[1])),
+                Ogre::Radian(Ogre::Degree(rotation[2])));
+
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            Ogre::Quaternion originalRotation = vcams[m_selected_videocam].vcam_rotation;
+            vcams[m_selected_videocam].vcam_rotation.FromRotationMatrix(newMat);
+
+            // Convert both rotations to Euler angles for logging
+            Ogre::Matrix3 origMat, editedMat;
+            originalRotation.ToRotationMatrix(origMat);
+            vcams[m_selected_videocam].vcam_rotation.ToRotationMatrix(editedMat);
+
+            Ogre::Radian origPitch, origYaw, origRoll;
+            origMat.ToEulerAnglesXYZ(origPitch, origYaw, origRoll);
+
+            Ogre::Radian editedPitch, editedYaw, editedRoll;
+            editedMat.ToEulerAnglesXYZ(editedPitch, editedYaw, editedRoll);
+
+            LOG(fmt::format("[Debug] Camera {}: Rotation changed\n"
+                           "Original (Pitch, Yaw, Roll): ({:.2f}, {:.2f}, {:.2f})\n"
+                           "Modified (Pitch, Yaw, Roll): ({:.2f}, {:.2f}, {:.2f})",
+                           m_selected_videocam,
+                           origPitch.valueDegrees(), origYaw.valueDegrees(), origRoll.valueDegrees(),
+                           editedPitch.valueDegrees(), editedYaw.valueDegrees(), editedRoll.valueDegrees()));
+        }
     }
     
     if (ImGui::Button(_LC("VidcamUtil", "Reset##rotation")))
