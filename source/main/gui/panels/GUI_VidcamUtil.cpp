@@ -54,6 +54,12 @@ namespace {
     const ImU32 LOOKAT_BEAM_COLOR = ImColor(1.0f, 0.27f, 0.67f, 1.0f); // Pink
 }
 
+struct CameraOrderInfo
+{
+    int index;
+    int load_order;
+};
+
 void VidcamUtil::SetVisible(bool v)
 {
     m_is_visible = v;
@@ -63,6 +69,7 @@ void VidcamUtil::SetVisible(bool v)
         m_actor = App::GetGameContext()->GetPlayerActor();
         m_selected_videocam = -1;
         m_orig_state.clear();
+        m_camera_order.clear(); // Clear previous order
 
         // Store initial states of all cameras
         if (m_actor)
@@ -70,6 +77,17 @@ void VidcamUtil::SetVisible(bool v)
             const std::vector<VideoCamera>& vcams = m_actor->GetGfxActor()->getVideoCameras();
             if (!vcams.empty())
             {
+                // Store camera indices in order they were defined (first = 0)
+                for (size_t i = 0; i < vcams.size(); i++)
+                {
+                    m_camera_order.push_back({static_cast<int>(i), vcams.size() - 1 - i});
+                }
+                // Sort by load order
+                std::sort(m_camera_order.begin(), m_camera_order.end(), 
+                    [](const CameraOrderInfo& a, const CameraOrderInfo& b) {
+                        return a.load_order < b.load_order;
+                    });
+
                 for (int i = 0; i < vcams.size(); i++)
                 {
                     VideoCamState state;
@@ -134,14 +152,18 @@ void VidcamUtil::Draw()
         ImGui::Text(_LC("VidcamUtil", "VideoCameras: %d"), vcams.size());
 
         ImGui::BeginChild("camera_list", ImVec2(200, 0), true);
-        for (int i = 0; i < vcams.size(); i++)
+        // Display cameras in truck file definition order
+        for (size_t i = 0; i < m_camera_order.size(); i++)
         {
-            char label[128];
-            snprintf(label, 128, "[%d] %s", i, GetVideoCamRoleStr(vcams[i].vcam_role));
+            const auto& cam_info = m_camera_order[i];
+            char label[256];
+            snprintf(label, 256, "[%d] %s\n%s", (int)i,
+                GetVideoCamRoleStr(vcams[cam_info.index].vcam_role),
+                vcams[cam_info.index].vcam_mat_name_orig.c_str());
 
-            if (ImGui::Selectable(label, m_selected_videocam == i))
+            if (ImGui::Selectable(label, m_selected_videocam == cam_info.index))
             {
-                m_selected_videocam = i;
+                m_selected_videocam = cam_info.index;
             }
         }
         ImGui::EndChild();

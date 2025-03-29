@@ -43,6 +43,14 @@ private:
     const char* GetVideoCamRoleStr(VideoCamRole role);
     void DrawDebugView(const VideoCamera* vcam);
 
+    // Tracks camera definition order
+    struct CameraOrderInfo
+    {
+        int index;          // Index in vcams array
+        size_t load_order;  // Order in which camera was loaded (0 = first)
+    };
+    std::vector<CameraOrderInfo> m_camera_order;
+
     bool m_is_visible = false;
     bool m_is_hovered = false;
     bool m_show_base_nodes = false;
