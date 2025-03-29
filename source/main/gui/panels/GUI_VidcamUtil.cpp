@@ -168,7 +168,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     // Truck file format line for easy copy-paste
     {
         ImGui::TextWrapped("Truck file format line, copy this into file:");
-        ImGui::TextWrapped("NOTE: This only includes the first 11 editable values, don't forget the rest!");
+        ImGui::TextWrapped("NOTE: This only includes the first 11 values, don't forget the rest!");
         ImGui::TextWrapped(";nref, nx, ny, ncam, nlookat, offx, offy, offz, rotx, roty, rotz ...");
         
         // Get Euler angles
@@ -180,8 +180,8 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         // Format truck file line
         std::string csv = fmt::format("{}, {}, {}, {}, {}, {:.2f}, {:.2f}, {:.2f}, {:.0f}, {:.0f}, {:.0f},",
             vcam->vcam_node_center,
-            vcam->vcam_node_dir_y,
             vcam->vcam_node_dir_z,
+            vcam->vcam_node_dir_y,
             vcam->vcam_node_alt_pos != NODENUM_INVALID ? vcam->vcam_node_alt_pos : -1,
             vcam->vcam_node_lookat != NODENUM_INVALID ? vcam->vcam_node_lookat : -1,
             vcam->vcam_pos_offset.x,
@@ -222,25 +222,6 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     {
         float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
         ImGui::PushItemWidth(w);
-        int node_dir_y = vcam->vcam_node_dir_y;
-        if (ImGui::InputInt(fmt::format("Direction Y node (spawn: {})", m_orig_state[m_selected_videocam].node_dir_y).c_str(),
-            &node_dir_y, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
-        {
-            node_dir_y = std::max(0, std::min(node_dir_y, (int)m_actor->ar_num_nodes - 1));
-            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
-            vcams[m_selected_videocam].vcam_node_dir_y = node_dir_y;
-        }
-        ImGui::PopItemWidth();
-        ImGui::SameLine();
-        if (ImGui::Button("Reset##diry"))
-        {
-            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
-            vcams[m_selected_videocam].vcam_node_dir_y = m_orig_state[m_selected_videocam].node_dir_y;
-        }
-    }
-    {
-        float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
-        ImGui::PushItemWidth(w);
         int node_dir_z = vcam->vcam_node_dir_z;
         if (ImGui::InputInt(fmt::format("Direction Z node (spawn: {})", m_orig_state[m_selected_videocam].node_dir_z).c_str(),
             &node_dir_z, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
@@ -255,6 +236,25 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         {
             std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
             vcams[m_selected_videocam].vcam_node_dir_z = m_orig_state[m_selected_videocam].node_dir_z;
+        }
+    }
+    {
+        float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
+        ImGui::PushItemWidth(w);
+        int node_dir_y = vcam->vcam_node_dir_y;
+        if (ImGui::InputInt(fmt::format("Direction Y node (spawn: {})", m_orig_state[m_selected_videocam].node_dir_y).c_str(),
+            &node_dir_y, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            node_dir_y = std::max(0, std::min(node_dir_y, (int)m_actor->ar_num_nodes - 1));
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_node_dir_y = node_dir_y;
+        }
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
+        if (ImGui::Button("Reset##diry"))
+        {
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_node_dir_y = m_orig_state[m_selected_videocam].node_dir_y;
         }
     }
     
