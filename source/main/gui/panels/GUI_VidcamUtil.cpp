@@ -158,6 +158,13 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
 {
     ImGui::BeginGroup();
 
+    if (vcam->vcam_role == VCAM_ROLE_MIRROR_PROP_LEFT || vcam->vcam_role == VCAM_ROLE_MIRROR_PROP_RIGHT)
+    {
+        ImGui::Text("Classic mirror prop cameras cannot be modified.");
+        ImGui::EndGroup();
+        return;
+    }
+
     // Node editors with spawn values
     {
         float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
@@ -444,6 +451,8 @@ const char* VidcamUtil::GetVideoCamRoleStr(VideoCamRole role)
     case VCAM_ROLE_TRACKING_VIDEOCAM:  return "Tracking";
     case VCAM_ROLE_MIRROR:             return "Mirror";
     case VCAM_ROLE_MIRROR_NOFLIP:      return "Mirror (no flip)";
-    default:                           return "Invalid (mirror prop)";
+    case VCAM_ROLE_MIRROR_PROP_LEFT:   return "Classic mirror prop (left)";
+    case VCAM_ROLE_MIRROR_PROP_RIGHT:  return "Classic mirror prop (right)";
+    default:                           return "Unknown";
     }
 }
