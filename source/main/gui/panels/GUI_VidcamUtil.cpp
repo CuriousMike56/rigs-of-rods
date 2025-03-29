@@ -209,7 +209,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         mat.ToEulerAnglesXYZ(pitch, yaw, roll);
 
         // Format truck file line
-        std::string csv = fmt::format("{}, {}, {}, {}, {}, {:.2f}, {:.2f}, {:.2f}, {:.0f}, {:.0f}, {:.0f},",
+        std::string csv = fmt::format("{}, {}, {}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f},",
             vcam->vcam_node_center,
             vcam->vcam_node_dir_z,
             vcam->vcam_node_dir_y,
@@ -343,7 +343,12 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     // Position offset editor with fine adjustment buttons
     ImGui::Text(_LC("VidcamUtil", "Position offset:"));
     float w = ImGui::GetContentRegionAvail().x * 0.6f;
-    float offset[3] = { vcam->vcam_pos_offset.x, vcam->vcam_pos_offset.y, vcam->vcam_pos_offset.z };
+    // Round stored values to 3 decimal places before displaying
+    float offset[3] = { 
+        std::round(vcam->vcam_pos_offset.x * 1000.0f) / 1000.0f,
+        std::round(vcam->vcam_pos_offset.y * 1000.0f) / 1000.0f,
+        std::round(vcam->vcam_pos_offset.z * 1000.0f) / 1000.0f
+    };
     bool pos_changed = false;
     
     const char* axes[] = {"X", "Y", "Z"};
@@ -351,9 +356,15 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     {
         ImGui::PushID(axes[i]);
         ImGui::PushItemWidth(w);
+        float prev_value = offset[i];
         if (ImGui::SliderFloat(axes[i], &offset[i], -10.0f, 10.0f, "%.3f"))
         {
-            pos_changed = true;
+            // Round to 3 decimal places
+            offset[i] = std::round(offset[i] * 1000.0f) / 1000.0f;
+            if (offset[i] != prev_value)
+            {
+                pos_changed = true;
+            }
         }
         ImGui::PopItemWidth();
         
@@ -361,13 +372,13 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         ImGui::SameLine();
         if (ImGui::Button("-", ImVec2(btn_width,0))) 
         { 
-            offset[i] -= 0.001f; 
+            offset[i] = std::round((offset[i] - 0.001f) * 1000.0f) / 1000.0f;
             pos_changed = true; 
         }
         ImGui::SameLine();
         if(ImGui::Button("+", ImVec2(btn_width,0))) 
         { 
-            offset[i] += 0.001f; 
+            offset[i] = std::round((offset[i] + 0.001f) * 1000.0f) / 1000.0f;
             pos_changed = true; 
         }
         ImGui::PopID();
@@ -376,6 +387,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     if (pos_changed)
     {
         std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+        // Store the rounded values
         vcams[m_selected_videocam].vcam_pos_offset = Ogre::Vector3(offset[0], offset[1], offset[2]);
     }
 
@@ -409,13 +421,10 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         float min_angle = -89.9f;
         float max_angle = 89.9f;
 
-        if (ImGui::SliderFloat(rot_axes[i], &rotation[i], min_angle, max_angle, "%.1f"))
+        if (ImGui::SliderFloat(rot_axes[i], &rotation[i], min_angle, max_angle, "%.3f"))
         {
-            // Validate the change
-            if (rotation[i] <= min_angle) rotation[i] = min_angle;
-            if (rotation[i] >= max_angle) rotation[i] = max_angle;
-            
-            // Only mark as changed if value actually changed
+            // Round to 3 decimal places
+            rotation[i] = std::round(rotation[i] * 1000.0f) / 1000.0f;
             if (rotation[i] != prev_value)
             {
                 rot_changed = true;
