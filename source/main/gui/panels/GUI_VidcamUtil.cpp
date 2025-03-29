@@ -165,6 +165,40 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         return;
     }
 
+    // Truck file format line for easy copy-paste
+    {
+        ImGui::TextWrapped("Truck file format line, copy this into file:");
+        ImGui::TextWrapped("NOTE: This only includes the first 11 editable values, don't forget the rest!");
+        ImGui::TextWrapped(";nref, nx, ny, ncam, nlookat, offx, offy, offz, rotx, roty, rotz ...");
+        
+        // Get Euler angles
+        Ogre::Matrix3 mat;
+        vcam->vcam_rotation.ToRotationMatrix(mat);
+        Ogre::Radian pitch, yaw, roll;
+        mat.ToEulerAnglesXYZ(pitch, yaw, roll);
+
+        // Format truck file line
+        std::string csv = fmt::format("{}, {}, {}, {}, {}, {:.2f}, {:.2f}, {:.2f}, {:.0f}, {:.0f}, {:.0f},",
+            vcam->vcam_node_center,
+            vcam->vcam_node_dir_y,
+            vcam->vcam_node_dir_z,
+            vcam->vcam_node_alt_pos != NODENUM_INVALID ? vcam->vcam_node_alt_pos : -1,
+            vcam->vcam_node_lookat != NODENUM_INVALID ? vcam->vcam_node_lookat : -1,
+            vcam->vcam_pos_offset.x,
+            vcam->vcam_pos_offset.y,
+            vcam->vcam_pos_offset.z,
+            pitch.valueDegrees(),
+            yaw.valueDegrees(),
+            roll.valueDegrees());
+
+        // Display in a selectable text box
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+        ImGui::InputText("##truckline", const_cast<char*>(csv.c_str()), csv.length(), ImGuiInputTextFlags_ReadOnly);
+        ImGui::PopStyleColor();
+    }
+
+    ImGui::Separator();
+
     // Node editors with spawn values
     {
         float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
