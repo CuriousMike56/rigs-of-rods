@@ -406,11 +406,14 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         ImGui::PushItemWidth(w);
 
         float prev_value = rotation[i];
-        if (ImGui::SliderFloat(rot_axes[i], &rotation[i], -180.0f, 180.0f, "%.1f"))
+        float min_angle = -89.9f;
+        float max_angle = 89.9f;
+
+        if (ImGui::SliderFloat(rot_axes[i], &rotation[i], min_angle, max_angle, "%.1f"))
         {
             // Validate the change
-            if (rotation[i] <= -180.f) rotation[i] = -180.f;
-            if (rotation[i] >= 180.f) rotation[i] = 180.f;
+            if (rotation[i] <= min_angle) rotation[i] = min_angle;
+            if (rotation[i] >= max_angle) rotation[i] = max_angle;
             
             // Only mark as changed if value actually changed
             if (rotation[i] != prev_value)
@@ -424,13 +427,13 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         ImGui::SameLine();
         if (ImGui::Button("-", ImVec2(btn_width,0))) 
         { 
-            rotation[i] = std::max(-180.f, rotation[i] - 0.1f);
+            rotation[i] = std::max(min_angle, rotation[i] - 0.1f);
             rot_changed = true;
         }
         ImGui::SameLine();
         if(ImGui::Button("+", ImVec2(btn_width,0))) 
         { 
-            rotation[i] = std::min(180.f, rotation[i] + 0.1f);
+            rotation[i] = std::min(max_angle, rotation[i] + 0.1f);
             rot_changed = true;
         }
         ImGui::PopID();
