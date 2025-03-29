@@ -40,6 +40,8 @@ using namespace GUI;
 
 namespace {
     const ImU32 BASENODE_COLOR(0xff44a5ff); // ABGR format
+    const ImU32 ALT_NODE_COLOR(0xff44ffaa);  // Light green
+    const ImU32 LOOKAT_NODE_COLOR(0xffff44aa); // Pink
     const float BASENODE_RADIUS(3.f);
     const float BEAM_THICKNESS(1.2f);
     const float BLUE_BEAM_THICKNESS = BEAM_THICKNESS + 0.8f;
@@ -48,6 +50,8 @@ namespace {
     const ImVec4 AXIS_Z_BEAM_COLOR_V4(0.f, 1.f, 0.f, 1.f);
     const ImU32 AXIS_Y_BEAM_COLOR = ImColor(AXIS_Y_BEAM_COLOR_V4);
     const ImU32 AXIS_Z_BEAM_COLOR = ImColor(AXIS_Z_BEAM_COLOR_V4);
+    const ImU32 ALT_BEAM_COLOR = ImColor(0.27f, 1.0f, 0.67f, 1.0f);    // Light green
+    const ImU32 LOOKAT_BEAM_COLOR = ImColor(1.0f, 0.27f, 0.67f, 1.0f); // Pink
 }
 
 void VidcamUtil::SetVisible(bool v)
@@ -218,7 +222,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
         ImGui::PushItemWidth(w);
         int node_alt = vcam->vcam_node_alt_pos;
-        if (ImGui::InputInt(fmt::format("Alt. pos node (spawn: {})", m_orig_state[m_selected_videocam].node_alt_pos).c_str(),
+        if (ImGui::InputInt(fmt::format("Alt. position node (spawn: {})", m_orig_state[m_selected_videocam].node_alt_pos).c_str(),
             &node_alt, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
         {
             node_alt = std::max(0, std::min(node_alt, (int)m_actor->ar_num_nodes - 1));
@@ -392,11 +396,24 @@ void VidcamUtil::DrawDebugView(const VideoCamera* vcam)
     Ogre::Vector3 dir_y_pos = world2screen.Convert(nodes[vcam->vcam_node_dir_y].AbsPosition);
     Ogre::Vector3 dir_z_pos = world2screen.Convert(nodes[vcam->vcam_node_dir_z].AbsPosition);
 
+    // Get additional node positions
+    Ogre::Vector3 alt_pos;
+    Ogre::Vector3 lookat_pos;
+    bool has_alt = vcam->vcam_node_alt_pos != NODENUM_INVALID;
+    bool has_lookat = vcam->vcam_node_lookat != NODENUM_INVALID;
+    
+    if (has_alt)
+        alt_pos = world2screen.Convert(nodes[vcam->vcam_node_alt_pos].AbsPosition);
+    if (has_lookat)
+        lookat_pos = world2screen.Convert(nodes[vcam->vcam_node_lookat].AbsPosition);
+
     // Draw nodes
     drawlist->ChannelsSetCurrent(LAYER_NODES);
     if (center_pos.z < 0.f) { drawlist->AddCircleFilled(ImVec2(center_pos.x, center_pos.y), BASENODE_RADIUS, BASENODE_COLOR); }
     if (dir_y_pos.z < 0.f) { drawlist->AddCircleFilled(ImVec2(dir_y_pos.x, dir_y_pos.y), BASENODE_RADIUS, BASENODE_COLOR); }
     if (dir_z_pos.z < 0.f) { drawlist->AddCircleFilled(ImVec2(dir_z_pos.x, dir_z_pos.y), BASENODE_RADIUS, BASENODE_COLOR); }
+    if (has_alt && alt_pos.z < 0.f) { drawlist->AddCircleFilled(ImVec2(alt_pos.x, alt_pos.y), BASENODE_RADIUS, ALT_NODE_COLOR); }
+    if (has_lookat && lookat_pos.z < 0.f) { drawlist->AddCircleFilled(ImVec2(lookat_pos.x, lookat_pos.y), BASENODE_RADIUS, LOOKAT_NODE_COLOR); }
 
     // Draw connection beams
     drawlist->ChannelsSetCurrent(LAYER_BEAMS);
@@ -404,6 +421,8 @@ void VidcamUtil::DrawDebugView(const VideoCamera* vcam)
     {
         if (dir_y_pos.z < 0.f) { drawlist->AddLine(ImVec2(center_pos.x, center_pos.y), ImVec2(dir_y_pos.x, dir_y_pos.y), AXIS_Y_BEAM_COLOR, BLUE_BEAM_THICKNESS); }
         if (dir_z_pos.z < 0.f) { drawlist->AddLine(ImVec2(center_pos.x, center_pos.y), ImVec2(dir_z_pos.x, dir_z_pos.y), AXIS_Z_BEAM_COLOR, BEAM_THICKNESS); }
+        if (has_alt && alt_pos.z < 0.f) { drawlist->AddLine(ImVec2(center_pos.x, center_pos.y), ImVec2(alt_pos.x, alt_pos.y), ALT_BEAM_COLOR, BEAM_THICKNESS); }
+        if (has_lookat && lookat_pos.z < 0.f) { drawlist->AddLine(ImVec2(center_pos.x, center_pos.y), ImVec2(lookat_pos.x, lookat_pos.y), LOOKAT_BEAM_COLOR, BEAM_THICKNESS); }
     }
 
     // Draw node numbers
@@ -411,6 +430,8 @@ void VidcamUtil::DrawDebugView(const VideoCamera* vcam)
     drawlist->AddText(ImVec2(center_pos.x, center_pos.y), NODE_TEXT_COLOR, fmt::format("{}", vcam->vcam_node_center).c_str());
     drawlist->AddText(ImVec2(dir_y_pos.x, dir_y_pos.y), NODE_TEXT_COLOR, fmt::format("{}", vcam->vcam_node_dir_y).c_str());
     drawlist->AddText(ImVec2(dir_z_pos.x, dir_z_pos.y), NODE_TEXT_COLOR, fmt::format("{}", vcam->vcam_node_dir_z).c_str());
+    if (has_alt) { drawlist->AddText(ImVec2(alt_pos.x, alt_pos.y), NODE_TEXT_COLOR, fmt::format("{}", vcam->vcam_node_alt_pos).c_str()); }
+    if (has_lookat) { drawlist->AddText(ImVec2(lookat_pos.x, lookat_pos.y), NODE_TEXT_COLOR, fmt::format("{}", vcam->vcam_node_lookat).c_str()); }
 
     drawlist->ChannelsMerge();
 }
@@ -423,6 +444,6 @@ const char* VidcamUtil::GetVideoCamRoleStr(VideoCamRole role)
     case VCAM_ROLE_TRACKING_VIDEOCAM:  return "Tracking";
     case VCAM_ROLE_MIRROR:             return "Mirror";
     case VCAM_ROLE_MIRROR_NOFLIP:      return "Mirror (no flip)";
-    default:                           return "Invalid";
+    default:                           return "Invalid (mirror prop)";
     }
 }
