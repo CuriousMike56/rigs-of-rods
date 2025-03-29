@@ -156,6 +156,8 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
 
     // Node editors with spawn values
     {
+        float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
+        ImGui::PushItemWidth(w);
         int node_center = vcam->vcam_node_center;
         if (ImGui::InputInt(fmt::format("Center node (spawn: {})", m_orig_state[m_selected_videocam].node_center).c_str(),
             &node_center, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
@@ -164,6 +166,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
             vcams[m_selected_videocam].vcam_node_center = node_center;
         }
+        ImGui::PopItemWidth();
         ImGui::SameLine();
         if (ImGui::Button("Reset##center"))
         {
@@ -172,6 +175,8 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         }
     }
     {
+        float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
+        ImGui::PushItemWidth(w);
         int node_dir_y = vcam->vcam_node_dir_y;
         if (ImGui::InputInt(fmt::format("Direction Y node (spawn: {})", m_orig_state[m_selected_videocam].node_dir_y).c_str(),
             &node_dir_y, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
@@ -180,6 +185,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
             vcams[m_selected_videocam].vcam_node_dir_y = node_dir_y;
         }
+        ImGui::PopItemWidth();
         ImGui::SameLine();
         if (ImGui::Button("Reset##diry"))
         {
@@ -188,6 +194,8 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         }
     }
     {
+        float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
+        ImGui::PushItemWidth(w);
         int node_dir_z = vcam->vcam_node_dir_z;
         if (ImGui::InputInt(fmt::format("Direction Z node (spawn: {})", m_orig_state[m_selected_videocam].node_dir_z).c_str(),
             &node_dir_z, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
@@ -196,6 +204,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
             vcams[m_selected_videocam].vcam_node_dir_z = node_dir_z;
         }
+        ImGui::PopItemWidth();
         ImGui::SameLine();
         if (ImGui::Button("Reset##dirz"))
         {
@@ -206,6 +215,8 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     
     if (vcam->vcam_node_alt_pos != NODENUM_INVALID)
     {
+        float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
+        ImGui::PushItemWidth(w);
         int node_alt = vcam->vcam_node_alt_pos;
         if (ImGui::InputInt(fmt::format("Alt. pos node (spawn: {})", m_orig_state[m_selected_videocam].node_alt_pos).c_str(),
             &node_alt, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
@@ -214,6 +225,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
             vcams[m_selected_videocam].vcam_node_alt_pos = node_alt;
         }
+        ImGui::PopItemWidth();
         ImGui::SameLine();
         if (ImGui::Button("Reset##altpos"))
         {
@@ -223,6 +235,8 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     }
     if (vcam->vcam_node_lookat != NODENUM_INVALID)
     {
+        float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
+        ImGui::PushItemWidth(w);
         int node_lookat = vcam->vcam_node_lookat;
         if (ImGui::InputInt(fmt::format("Look-at node (spawn: {})", m_orig_state[m_selected_videocam].node_lookat).c_str(),
             &node_lookat, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
@@ -231,6 +245,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
             vcams[m_selected_videocam].vcam_node_lookat = node_lookat;
         }
+        ImGui::PopItemWidth();
         ImGui::SameLine();
         if (ImGui::Button("Reset##lookat"))
         {
@@ -251,6 +266,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
 
     // Position offset editor with fine adjustment buttons
     ImGui::Text(_LC("VidcamUtil", "Position offset:"));
+    float w = ImGui::GetContentRegionAvail().x * 0.6f;
     float offset[3] = { vcam->vcam_pos_offset.x, vcam->vcam_pos_offset.y, vcam->vcam_pos_offset.z };
     bool pos_changed = false;
     
@@ -258,10 +274,12 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     for (int i = 0; i < 3; i++)
     {
         ImGui::PushID(axes[i]);
+        ImGui::PushItemWidth(w);
         if (ImGui::SliderFloat(axes[i], &offset[i], -10.0f, 10.0f, "%.3f"))
         {
             pos_changed = true;
         }
+        ImGui::PopItemWidth();
         
         float btn_width = 25.0f;
         ImGui::SameLine();
@@ -309,10 +327,12 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     for (int i = 0; i < 3; i++)
     {
         ImGui::PushID(rot_axes[i]);
+        ImGui::PushItemWidth(w);
         if (ImGui::SliderFloat(rot_axes[i], &rotation[i], -180.0f, 180.0f, "%.1f"))
         {
             rot_changed = true;
         }
+        ImGui::PopItemWidth();
         
         float btn_width = 25.0f;
         ImGui::SameLine();

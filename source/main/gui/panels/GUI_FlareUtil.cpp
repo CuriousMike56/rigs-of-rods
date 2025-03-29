@@ -154,6 +154,8 @@ void FlareUtil::Draw()
             
             // Node editors
             {
+                float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
+                ImGui::PushItemWidth(w);
                 int noderef = flare.noderef;
                 if (ImGui::InputInt(fmt::format("Ref node (spawn: {})", m_spawn_values.noderef).c_str(), 
                     &noderef, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
@@ -161,10 +163,13 @@ void FlareUtil::Draw()
                     noderef = std::max(0, std::min(noderef, (int)m_actor->ar_num_nodes - 1));
                     flare.noderef = noderef;
                 }
+                ImGui::PopItemWidth();
                 ImGui::SameLine();
                 if (ImGui::Button("Reset##ref")) { flare.noderef = m_spawn_values.noderef; }
             }
             {
+                float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
+                ImGui::PushItemWidth(w);
                 int nodex = flare.nodex;
                 if (ImGui::InputInt(fmt::format("Node X (spawn: {})", m_spawn_values.nodex).c_str(),
                     &nodex, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
@@ -172,10 +177,13 @@ void FlareUtil::Draw()
                     nodex = std::max(0, std::min(nodex, (int)m_actor->ar_num_nodes - 1));
                     flare.nodex = nodex;
                 }
+                ImGui::PopItemWidth();
                 ImGui::SameLine();
                 if (ImGui::Button("Reset##nodex")) { flare.nodex = m_spawn_values.nodex; }
             }
             {
+                float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
+                ImGui::PushItemWidth(w);
                 int nodey = flare.nodey;
                 if (ImGui::InputInt(fmt::format("Node Y (spawn: {})", m_spawn_values.nodey).c_str(),
                     &nodey, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
@@ -183,6 +191,7 @@ void FlareUtil::Draw()
                     nodey = std::max(0, std::min(nodey, (int)m_actor->ar_num_nodes - 1));
                     flare.nodey = nodey;
                 }
+                ImGui::PopItemWidth();
                 ImGui::SameLine();
                 if (ImGui::Button("Reset##nodey")) { flare.nodey = m_spawn_values.nodey; }
             }
@@ -197,11 +206,14 @@ void FlareUtil::Draw()
 
             // Position editor with fine adjustment buttons
             ImGui::Text(_LC("FlareUtil", "Position offset:"));
+            float w = ImGui::GetContentRegionAvail().x * 0.6f;
             {
                 // X axis
                 ImGui::PushID("PosX");
+                ImGui::PushItemWidth(w);
                 float pos_x = flare.offsetx;
                 bool pos_changed = ImGui::SliderFloat("X", &pos_x, -10.0f, 10.0f, "%.3f");
+                ImGui::PopItemWidth();
                 {
                     float btn_width = 25.0f;
                     float spacing = ImGui::GetStyle().ItemSpacing.x;
@@ -216,8 +228,10 @@ void FlareUtil::Draw()
             {
                 // Y axis  
                 ImGui::PushID("PosY");
+                ImGui::PushItemWidth(w);
                 float pos_y = flare.offsety;
                 bool pos_changed = ImGui::SliderFloat("Y", &pos_y, -10.0f, 10.0f, "%.3f");
+                ImGui::PopItemWidth();
                 {
                     float btn_width = 25.0f;
                     float spacing = ImGui::GetStyle().ItemSpacing.x;
@@ -232,8 +246,10 @@ void FlareUtil::Draw()
             {
                 // Z axis
                 ImGui::PushID("PosZ");
+                ImGui::PushItemWidth(w);
                 float pos_z = flare.offsetz;
                 bool pos_changed = ImGui::SliderFloat("Z", &pos_z, -10.0f, 10.0f, "%.3f");
+                ImGui::PopItemWidth();
                 {
                     float btn_width = 25.0f;
                     float spacing = ImGui::GetStyle().ItemSpacing.x;
@@ -256,10 +272,12 @@ void FlareUtil::Draw()
             // Size editor with fine adjustment buttons
             ImGui::Text(_LC("FlareUtil", "Size:"));
             float size = flare.size;
+            ImGui::PushItemWidth(w);
             if (ImGui::SliderFloat("##size", &size, 0.1f, 10.0f, "%.3f"))
             {
                 flare.size = size;
             }
+            ImGui::PopItemWidth();
             {
                 float btn_width = 25.0f;
                 float spacing = ImGui::GetStyle().ItemSpacing.x;
