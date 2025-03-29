@@ -54,11 +54,21 @@ private:
     {
         VideoCamState():
             pos_offset(Ogre::Vector3::ZERO),
-            rotation(Ogre::Quaternion::IDENTITY)
+            rotation(Ogre::Quaternion::IDENTITY),
+            node_center(0), 
+            node_dir_y(0),  
+            node_dir_z(0),
+            node_alt_pos(NODENUM_INVALID),
+            node_lookat(NODENUM_INVALID)
         {}
 
         Ogre::Vector3    pos_offset;
         Ogre::Quaternion rotation;
+        int node_center;
+        int node_dir_y;
+        int node_dir_z;
+        int node_alt_pos;
+        int node_lookat;
     };
     std::map<int, VideoCamState> m_orig_state;
 };

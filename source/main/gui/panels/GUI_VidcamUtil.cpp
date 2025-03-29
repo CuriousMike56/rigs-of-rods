@@ -71,6 +71,11 @@ void VidcamUtil::SetVisible(bool v)
                     VideoCamState state;
                     state.pos_offset = vcams[i].vcam_pos_offset;
                     state.rotation = vcams[i].vcam_rotation;
+                    state.node_center = vcams[i].vcam_node_center;
+                    state.node_dir_y = vcams[i].vcam_node_dir_y;
+                    state.node_dir_z = vcams[i].vcam_node_dir_z;
+                    state.node_alt_pos = vcams[i].vcam_node_alt_pos;
+                    state.node_lookat = vcams[i].vcam_node_lookat;
                     m_orig_state[i] = state;
                 }
             }
@@ -149,17 +154,89 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
 {
     ImGui::BeginGroup();
 
-    // Display basic info
-    ImGui::Text(_LC("VidcamUtil", "Center node: %d"), vcam->vcam_node_center);
-    ImGui::Text(_LC("VidcamUtil", "Direction Y node: %d"), vcam->vcam_node_dir_y);
-    ImGui::Text(_LC("VidcamUtil", "Direction Z node: %d"), vcam->vcam_node_dir_z);
+    // Node editors with spawn values
+    {
+        int node_center = vcam->vcam_node_center;
+        if (ImGui::InputInt(fmt::format("Center node (spawn: {})", m_orig_state[m_selected_videocam].node_center).c_str(),
+            &node_center, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            node_center = std::max(0, std::min(node_center, (int)m_actor->ar_num_nodes - 1));
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_node_center = node_center;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Reset##center"))
+        {
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_node_center = m_orig_state[m_selected_videocam].node_center;
+        }
+    }
+    {
+        int node_dir_y = vcam->vcam_node_dir_y;
+        if (ImGui::InputInt(fmt::format("Direction Y node (spawn: {})", m_orig_state[m_selected_videocam].node_dir_y).c_str(),
+            &node_dir_y, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            node_dir_y = std::max(0, std::min(node_dir_y, (int)m_actor->ar_num_nodes - 1));
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_node_dir_y = node_dir_y;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Reset##diry"))
+        {
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_node_dir_y = m_orig_state[m_selected_videocam].node_dir_y;
+        }
+    }
+    {
+        int node_dir_z = vcam->vcam_node_dir_z;
+        if (ImGui::InputInt(fmt::format("Direction Z node (spawn: {})", m_orig_state[m_selected_videocam].node_dir_z).c_str(),
+            &node_dir_z, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            node_dir_z = std::max(0, std::min(node_dir_z, (int)m_actor->ar_num_nodes - 1));
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_node_dir_z = node_dir_z;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Reset##dirz"))
+        {
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_node_dir_z = m_orig_state[m_selected_videocam].node_dir_z;
+        }
+    }
+    
     if (vcam->vcam_node_alt_pos != NODENUM_INVALID)
     {
-        ImGui::Text(_LC("VidcamUtil", "Alternative position node: %d"), vcam->vcam_node_alt_pos);
+        int node_alt = vcam->vcam_node_alt_pos;
+        if (ImGui::InputInt(fmt::format("Alt. pos node (spawn: {})", m_orig_state[m_selected_videocam].node_alt_pos).c_str(),
+            &node_alt, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            node_alt = std::max(0, std::min(node_alt, (int)m_actor->ar_num_nodes - 1));
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_node_alt_pos = node_alt;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Reset##altpos"))
+        {
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_node_alt_pos = m_orig_state[m_selected_videocam].node_alt_pos;
+        }
     }
     if (vcam->vcam_node_lookat != NODENUM_INVALID)
     {
-        ImGui::Text(_LC("VidcamUtil", "Look-at node: %d"), vcam->vcam_node_lookat);
+        int node_lookat = vcam->vcam_node_lookat;
+        if (ImGui::InputInt(fmt::format("Look-at node (spawn: {})", m_orig_state[m_selected_videocam].node_lookat).c_str(),
+            &node_lookat, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            node_lookat = std::max(0, std::min(node_lookat, (int)m_actor->ar_num_nodes - 1));
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_node_lookat = node_lookat;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Reset##lookat"))
+        {
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_node_lookat = m_orig_state[m_selected_videocam].node_lookat;
+        }
     }
 
     ImGui::Checkbox("Show##base", &m_show_base_nodes);

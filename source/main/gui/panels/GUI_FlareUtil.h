@@ -55,6 +55,9 @@ private:
         float offset_y = 0.f;
         float offset_z = 0.f;
         float size = 1.f;
+        int noderef = 0;
+        int nodex = 0;
+        int nodey = 0;
     };
     OriginalValues m_spawn_values;
 };

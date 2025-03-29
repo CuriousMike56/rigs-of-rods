@@ -65,6 +65,9 @@ void FlareUtil::SetVisible(bool v)
             m_spawn_values.offset_y = flare.offsety; 
             m_spawn_values.offset_z = flare.offsetz;
             m_spawn_values.size = flare.size;
+            m_spawn_values.noderef = flare.noderef;
+            m_spawn_values.nodex = flare.nodex;
+            m_spawn_values.nodey = flare.nodey;
         }
     }
 }
@@ -131,6 +134,9 @@ void FlareUtil::Draw()
                 m_spawn_values.offset_y = flare.offsety;
                 m_spawn_values.offset_z = flare.offsetz;
                 m_spawn_values.size = flare.size;
+                m_spawn_values.noderef = flare.noderef;
+                m_spawn_values.nodex = flare.nodex;
+                m_spawn_values.nodey = flare.nodey;
             }
         }
         ImGui::EndChild();
@@ -145,9 +151,42 @@ void FlareUtil::Draw()
 
             // Display type and reference nodes
             ImGui::Text(_LC("FlareUtil", "Type: %c (%s)"), (char)flare.fl_type, GetFlareTypeDesc(flare.fl_type));
-            ImGui::Text(_LC("FlareUtil", "Ref node: %d"), flare.noderef);
-            ImGui::Text(_LC("FlareUtil", "Node X: %d"), flare.nodex);
-            ImGui::Text(_LC("FlareUtil", "Node Y: %d"), flare.nodey);
+            
+            // Node editors
+            {
+                int noderef = flare.noderef;
+                if (ImGui::InputInt(fmt::format("Ref node (spawn: {})", m_spawn_values.noderef).c_str(), 
+                    &noderef, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
+                {
+                    noderef = std::max(0, std::min(noderef, (int)m_actor->ar_num_nodes - 1));
+                    flare.noderef = noderef;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Reset##ref")) { flare.noderef = m_spawn_values.noderef; }
+            }
+            {
+                int nodex = flare.nodex;
+                if (ImGui::InputInt(fmt::format("Node X (spawn: {})", m_spawn_values.nodex).c_str(),
+                    &nodex, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
+                {
+                    nodex = std::max(0, std::min(nodex, (int)m_actor->ar_num_nodes - 1));
+                    flare.nodex = nodex;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Reset##nodex")) { flare.nodex = m_spawn_values.nodex; }
+            }
+            {
+                int nodey = flare.nodey;
+                if (ImGui::InputInt(fmt::format("Node Y (spawn: {})", m_spawn_values.nodey).c_str(),
+                    &nodey, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
+                {
+                    nodey = std::max(0, std::min(nodey, (int)m_actor->ar_num_nodes - 1));
+                    flare.nodey = nodey;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Reset##nodey")) { flare.nodey = m_spawn_values.nodey; }
+            }
+
             ImGui::Checkbox("Show##base", &m_show_base_nodes);
             if (flare.fl_type == FlareType::USER)
             {
@@ -258,9 +297,7 @@ void FlareUtil::DrawDebugView(const flare_t* flare)
     // Setup world to screen conversion
     ImVec2 screen_size = ImGui::GetIO().DisplaySize;
     World2ScreenConverter world2screen(
-        App::GetCameraManager()->GetCamera()->getViewMatrix(true), 
-        App::GetCameraManager()->GetCamera()->getProjectionMatrix(), 
-        Ogre::Vector2(screen_size.x, screen_size.y));
+        App::GetCameraManager()->GetCamera()->getViewMatrix(true), App::GetCameraManager()->GetCamera()->getProjectionMatrix(), Ogre::Vector2(screen_size.x, screen_size.y));
 
     ImDrawList* drawlist = GetImDummyFullscreenWindow();
 
