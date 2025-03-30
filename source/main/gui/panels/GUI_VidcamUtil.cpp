@@ -187,6 +187,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
 {
     ImGui::BeginGroup();
 
+    // Check for classic mirror props first
     if (vcam->vcam_role == VCAM_ROLE_MIRROR_PROP_LEFT || vcam->vcam_role == VCAM_ROLE_MIRROR_PROP_RIGHT)
     {
         ImGui::Text("Classic mirror prop cameras cannot be modified.");
@@ -194,31 +195,48 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         return;
     }
 
+    // Then determine if this is any kind of tracking camera
+    bool is_tracking = (vcam->vcam_role == VCAM_ROLE_TRACKING_VIDEOCAM ||
+                       vcam->vcam_role == VCAM_ROLE_TRACKING_MIRROR ||
+                       vcam->vcam_role == VCAM_ROLE_TRACKING_MIRROR_NOFLIP);
+
+    // Is this a tracking mirror specifically?
+    bool is_tracking_mirror = (vcam->vcam_role == VCAM_ROLE_TRACKING_MIRROR ||
+                             vcam->vcam_role == VCAM_ROLE_TRACKING_MIRROR_NOFLIP);
+
     // Truck file format line for easy copy-paste
     {
-        ImGui::TextWrapped("Truck file format line, copy this into file:");
+        ImGui::TextWrapped("Truck file format line:");
         ImGui::TextWrapped("NOTE: This only includes the first 11 values, don't forget the rest!");
         ImGui::TextWrapped(";nref, nx, ny, ncam, nlookat, offx, offy, offz, rotx, roty, rotz ...");
         
         // Get Euler angles
-        Ogre::Matrix3 mat;
-        vcam->vcam_rotation.ToRotationMatrix(mat);
-        Ogre::Radian pitch, yaw, roll;
-        mat.ToEulerAnglesXYZ(pitch, yaw, roll);
+        float pitch = 0.f, yaw = 0.f, roll = 0.f;
+        if (!is_tracking)
+        {
+            Ogre::Matrix3 mat;
+            vcam->vcam_rotation.ToRotationMatrix(mat);
+            Ogre::Radian rpitch, ryaw, rroll;
+            mat.ToEulerAnglesXYZ(rpitch, ryaw, rroll);
+            pitch = rpitch.valueDegrees();
+            yaw = ryaw.valueDegrees();
+            roll = rroll.valueDegrees();
+        }
+
+        // For tracking mirrors, alt_pos should be -1 in truck file even though internally it's set to center node
+        int alt_pos_value = (is_tracking_mirror || vcam->vcam_node_alt_pos == NODENUM_INVALID) ? -1 : vcam->vcam_node_alt_pos;
 
         // Format truck file line
         std::string csv = fmt::format("{}, {}, {}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f},",
             vcam->vcam_node_center,
             vcam->vcam_node_dir_z,
             vcam->vcam_node_dir_y,
-            vcam->vcam_node_alt_pos != NODENUM_INVALID ? vcam->vcam_node_alt_pos : -1,
+            alt_pos_value,
             vcam->vcam_node_lookat != NODENUM_INVALID ? vcam->vcam_node_lookat : -1,
             vcam->vcam_pos_offset.x,
             vcam->vcam_pos_offset.y,
             vcam->vcam_pos_offset.z,
-            pitch.valueDegrees(),
-            yaw.valueDegrees(),
-            roll.valueDegrees());
+            pitch, yaw, roll);
 
         // Display in a selectable text box
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
@@ -287,12 +305,13 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         }
     }
     
-    if (vcam->vcam_node_alt_pos != NODENUM_INVALID)
+    // Show alt reference node editor only if this is not a tracking mirror
+    if (vcam->vcam_node_alt_pos != NODENUM_INVALID && !is_tracking_mirror)
     {
         float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
         ImGui::PushItemWidth(w);
         int node_alt = vcam->vcam_node_alt_pos;
-        if (ImGui::InputInt(fmt::format("Alt. position node (spawn: {})", m_orig_state[m_selected_videocam].node_alt_pos).c_str(),
+        if (ImGui::InputInt(fmt::format("Alt. reference node (spawn: {})", m_orig_state[m_selected_videocam].node_alt_pos).c_str(),
             &node_alt, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
         {
             node_alt = std::max(0, std::min(node_alt, (int)m_actor->ar_num_nodes - 1));
@@ -395,106 +414,115 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         vcams[m_selected_videocam].vcam_pos_offset = m_orig_state[m_selected_videocam].pos_offset;
     }
 
-    // Rotation editor with fine adjustment buttons
-    ImGui::Text(_LC("VidcamUtil", "Rotation (degrees):"));
-    Ogre::Matrix3 mat;
-    vcam->vcam_rotation.ToRotationMatrix(mat);
-    Ogre::Radian pitch, yaw, roll;
-    mat.ToEulerAnglesXYZ(pitch, yaw, roll);
-    
-    float rotation[3] = {
-        std::fmod(pitch.valueDegrees() + 180.0f, 360.0f) - 180.0f,  // Normalize to -180..+180
-        std::fmod(yaw.valueDegrees() + 180.0f, 360.0f) - 180.0f,
-        std::fmod(roll.valueDegrees() + 180.0f, 360.0f) - 180.0f
-    };
-    bool rot_changed = false;
-
-    const char* rot_axes[] = {"Pitch", "Yaw", "Roll"};
-    for (int i = 0; i < 3; i++)
+    // Only show rotation controls for non-tracking cameras/mirrors
+    if (!is_tracking)
     {
-        ImGui::PushID(rot_axes[i]);
-        ImGui::PushItemWidth(w);
-
-        float prev_value = rotation[i];
-        float min_angle = -89.9f;
-        float max_angle = 89.9f;
-
-        if (ImGui::SliderFloat(rot_axes[i], &rotation[i], min_angle, max_angle, "%.3f"))
-        {
-            // Round to 3 decimal places
-            rotation[i] = std::round(rotation[i] * 1000.0f) / 1000.0f;
-            if (rotation[i] != prev_value)
-            {
-                rot_changed = true;
-            }
-        }
-        ImGui::PopItemWidth();
+        // Rotation editor with fine adjustment buttons
+        ImGui::Text(_LC("VidcamUtil", "Rotation (degrees):"));
+        Ogre::Matrix3 mat;
+        vcam->vcam_rotation.ToRotationMatrix(mat);
+        Ogre::Radian pitch, yaw, roll;
+        mat.ToEulerAnglesXYZ(pitch, yaw, roll);
         
-        float btn_width = 25.0f;
-        ImGui::SameLine();
-        if (ImGui::Button("-", ImVec2(btn_width,0))) 
-        { 
-            rotation[i] = std::max(min_angle, rotation[i] - 0.1f);
-            rot_changed = true;
-        }
-        ImGui::SameLine();
-        if(ImGui::Button("+", ImVec2(btn_width,0))) 
-        { 
-            rotation[i] = std::min(max_angle, rotation[i] + 0.1f);
-            rot_changed = true;
-        }
-        ImGui::PopID();
-    }
+        float rotation[3] = {
+            std::fmod(pitch.valueDegrees() + 180.0f, 360.0f) - 180.0f,  // Normalize to -180..+180
+            std::fmod(yaw.valueDegrees() + 180.0f, 360.0f) - 180.0f,
+            std::fmod(roll.valueDegrees() + 180.0f, 360.0f) - 180.0f
+        };
+        bool rot_changed = false;
 
-    if (rot_changed)
-    {
-        // Safety check - validate all values are in proper range
-        bool valid = true;
+        const char* rot_axes[] = {"Pitch", "Yaw", "Roll"};
         for (int i = 0; i < 3; i++)
         {
-            if (std::isnan(rotation[i]) || rotation[i] < -180.f || rotation[i] > 180.f)
+            ImGui::PushID(rot_axes[i]);
+            ImGui::PushItemWidth(w);
+
+            float prev_value = rotation[i];
+            float min_angle = -89.9f;
+            float max_angle = 89.9f;
+
+            if (ImGui::SliderFloat(rot_axes[i], &rotation[i], min_angle, max_angle, "%.3f"))
             {
-                valid = false;
-                break;
+                // Round to 3 decimal places
+                rotation[i] = std::round(rotation[i] * 1000.0f) / 1000.0f;
+                if (rotation[i] != prev_value)
+                {
+                    rot_changed = true;
+                }
+            }
+            ImGui::PopItemWidth();
+            
+            float btn_width = 25.0f;
+            ImGui::SameLine();
+            if (ImGui::Button("-", ImVec2(btn_width,0))) 
+            { 
+                rotation[i] = std::max(min_angle, rotation[i] - 0.1f);
+                rot_changed = true;
+            }
+            ImGui::SameLine();
+            if(ImGui::Button("+", ImVec2(btn_width,0))) 
+            { 
+                rotation[i] = std::min(max_angle, rotation[i] + 0.1f);
+                rot_changed = true;
+            }
+            ImGui::PopID();
+        }
+
+        if (rot_changed)
+        {
+            // Safety check - validate all values are in proper range
+            bool valid = true;
+            for (int i = 0; i < 3; i++)
+            {
+                if (std::isnan(rotation[i]) || rotation[i] < -180.f || rotation[i] > 180.f)
+                {
+                    valid = false;
+                    break;
+                }
+            }
+
+            if (valid)
+            {
+                Ogre::Matrix3 newMat;
+                newMat.FromEulerAnglesXYZ(
+                    Ogre::Radian(Ogre::Degree(rotation[0])),
+                    Ogre::Radian(Ogre::Degree(rotation[1])),
+                    Ogre::Radian(Ogre::Degree(rotation[2])));
+
+                std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+                Ogre::Quaternion originalRotation = vcams[m_selected_videocam].vcam_rotation;
+                vcams[m_selected_videocam].vcam_rotation.FromRotationMatrix(newMat);
+
+                // Convert both rotations to Euler angles for logging
+                Ogre::Matrix3 origMat, editedMat;
+                originalRotation.ToRotationMatrix(origMat);
+                vcams[m_selected_videocam].vcam_rotation.ToRotationMatrix(editedMat);
+
+                Ogre::Radian origPitch, origYaw, origRoll;
+                origMat.ToEulerAnglesXYZ(origPitch, origYaw, origRoll);
+
+                Ogre::Radian editedPitch, editedYaw, editedRoll;
+                editedMat.ToEulerAnglesXYZ(editedPitch, editedYaw, editedRoll);
+
+                LOG(fmt::format("[Debug] Camera {}: Rotation changed\n"
+                               "Original (Pitch, Yaw, Roll): ({:.2f}, {:.2f}, {:.2f})\n"
+                               "Modified (Pitch, Yaw, Roll): ({:.2f}, {:.2f}, {:.2f})",
+                               m_selected_videocam,
+                               origPitch.valueDegrees(), origYaw.valueDegrees(), origRoll.valueDegrees(),
+                               editedPitch.valueDegrees(), editedYaw.valueDegrees(), editedRoll.valueDegrees()));
             }
         }
-
-        if (valid)
+        
+        if (ImGui::Button(_LC("VidcamUtil", "Reset##rotation")))
         {
-            Ogre::Matrix3 newMat;
-            newMat.FromEulerAnglesXYZ(
-                Ogre::Radian(Ogre::Degree(rotation[0])),
-                Ogre::Radian(Ogre::Degree(rotation[1])),
-                Ogre::Radian(Ogre::Degree(rotation[2])));
-
             std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
-            Ogre::Quaternion originalRotation = vcams[m_selected_videocam].vcam_rotation;
-            vcams[m_selected_videocam].vcam_rotation.FromRotationMatrix(newMat);
-
-            // Convert both rotations to Euler angles for logging
-            Ogre::Matrix3 origMat, editedMat;
-            originalRotation.ToRotationMatrix(origMat);
-            vcams[m_selected_videocam].vcam_rotation.ToRotationMatrix(editedMat);
-
-            Ogre::Radian origPitch, origYaw, origRoll;
-            origMat.ToEulerAnglesXYZ(origPitch, origYaw, origRoll);
-
-            Ogre::Radian editedPitch, editedYaw, editedRoll;
-            editedMat.ToEulerAnglesXYZ(editedPitch, editedYaw, editedRoll);
-
-            LOG(fmt::format("[Debug] Camera {}: Rotation changed\n"
-                           "Original (Pitch, Yaw, Roll): ({:.2f}, {:.2f}, {:.2f})\n"
-                           "Modified (Pitch, Yaw, Roll): ({:.2f}, {:.2f}, {:.2f})",
-                           m_selected_videocam,
-                           origPitch.valueDegrees(), origYaw.valueDegrees(), origRoll.valueDegrees(),
-                           editedPitch.valueDegrees(), editedYaw.valueDegrees(), editedRoll.valueDegrees()));
+            vcams[m_selected_videocam].vcam_rotation = m_orig_state[m_selected_videocam].rotation;
         }
     }
-    
-    if (ImGui::Button(_LC("VidcamUtil", "Reset##rotation")))
+    else
     {
-        std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
-        vcams[m_selected_videocam].vcam_rotation = m_orig_state[m_selected_videocam].rotation;
+        ImGui::Text("Rotation controls disabled for tracking cameras/mirrors");
+        ImGui::Text("(rotation is auto-calculated based on look-at node)");
     }
 
     ImGui::EndGroup();
@@ -571,6 +599,8 @@ const char* VidcamUtil::GetVideoCamRoleStr(VideoCamRole role)
     case VCAM_ROLE_MIRROR_NOFLIP:      return "Mirror (no flip)";
     case VCAM_ROLE_MIRROR_PROP_LEFT:   return "Classic mirror prop (left)";
     case VCAM_ROLE_MIRROR_PROP_RIGHT:  return "Classic mirror prop (right)";
+    case VCAM_ROLE_TRACKING_MIRROR:    return "Tracking mirror";
+    case VCAM_ROLE_TRACKING_MIRROR_NOFLIP: return "Tracking mirror (no flip)";
     default:                           return "Unknown";
     }
 }
