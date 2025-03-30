@@ -56,6 +56,7 @@ private:
     bool m_show_base_nodes = false;
     ActorPtr m_actor;
     int m_selected_videocam = -1;
+    float m_current_fov = 45.0f;
 
     // Store original values for reset
     struct VideoCamState 
@@ -67,7 +68,8 @@ private:
             node_dir_y(0),  
             node_dir_z(0),
             node_alt_pos(NODENUM_INVALID),
-            node_lookat(NODENUM_INVALID)
+            node_lookat(NODENUM_INVALID),
+            field_of_view(45.0f)
         {}
 
         Ogre::Vector3    pos_offset;
@@ -77,8 +79,11 @@ private:
         int node_dir_z;
         int node_alt_pos;
         int node_lookat;
+        float field_of_view;
     };
     std::map<int, VideoCamState> m_orig_state;
+    
+    float initial_fov = 45.0f; // Default initial FOV
 };
 
 } // namespace GUI

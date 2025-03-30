@@ -99,6 +99,8 @@ void VidcamUtil::SetVisible(bool v)
                     state.node_dir_z = vcams[i].vcam_node_dir_z;
                     state.node_alt_pos = vcams[i].vcam_node_alt_pos;
                     state.node_lookat = vcams[i].vcam_node_lookat;
+                    state.field_of_view = vcams[i].vcam_ogre_camera->getFOVy().valueDegrees();
+                    
                     m_orig_state[i] = state;
 
                     // Log original rotation
@@ -207,8 +209,8 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     // Truck file format line for easy copy-paste
     {
         ImGui::TextWrapped("Truck file format line:");
-        ImGui::TextWrapped("NOTE: This only includes the first 11 values, don't forget the rest!");
-        ImGui::TextWrapped(";nref, nx, ny, ncam, nlookat, offx, offy, offz, rotx, roty, rotz ...");
+        ImGui::TextWrapped("NOTE: This only includes the first 12 values, don't forget the rest!");
+        ImGui::TextWrapped(";nref, nx, ny, ncam, nlookat, offx, offy, offz, rotx, roty, rotz, fov ...");
         
         // Get Euler angles
         float pitch = 0.f, yaw = 0.f, roll = 0.f;
@@ -227,7 +229,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         int alt_pos_value = (is_tracking_mirror || vcam->vcam_node_alt_pos == NODENUM_INVALID) ? -1 : vcam->vcam_node_alt_pos;
 
         // Format truck file line
-        std::string csv = fmt::format("{}, {}, {}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f},",
+        std::string csv = fmt::format("{}, {}, {}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.1f},",
             vcam->vcam_node_center,
             vcam->vcam_node_dir_z,
             vcam->vcam_node_dir_y,
@@ -236,7 +238,8 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             vcam->vcam_pos_offset.x,
             vcam->vcam_pos_offset.y,
             vcam->vcam_pos_offset.z,
-            pitch, yaw, roll);
+            pitch, yaw, roll,
+            m_current_fov);
 
         // Display in a selectable text box
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
@@ -359,7 +362,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
 
     // Position offset editor with fine adjustment buttons
     ImGui::Text(_LC("VidcamUtil", "Position offset:"));
-    float w = ImGui::GetContentRegionAvail().x * 0.6f;
+    const float content_w = ImGui::GetContentRegionAvail().x * 0.6f;
     // Round stored values to 3 decimal places before displaying
     float offset[3] = { 
         std::round(vcam->vcam_pos_offset.x * 1000.0f) / 1000.0f,
@@ -372,7 +375,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     for (int i = 0; i < 3; i++)
     {
         ImGui::PushID(axes[i]);
-        ImGui::PushItemWidth(w);
+        ImGui::PushItemWidth(content_w);
         float prev_value = offset[i];
         if (ImGui::SliderFloat(axes[i], &offset[i], -10.0f, 10.0f, "%.3f"))
         {
@@ -435,7 +438,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         for (int i = 0; i < 3; i++)
         {
             ImGui::PushID(rot_axes[i]);
-            ImGui::PushItemWidth(w);
+            ImGui::PushItemWidth(content_w);
 
             float prev_value = rotation[i];
             float min_angle = -89.9f;
@@ -523,6 +526,51 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     {
         ImGui::Text("Rotation controls disabled for tracking cameras/mirrors");
         ImGui::Text("(rotation is auto-calculated based on look-at node)");
+    }
+
+    ImGui::Separator();
+
+    // FOV editor 
+    ImGui::Text(_LC("VidcamUtil", "Field of View (degrees):"));
+    float w = ImGui::GetContentRegionAvail().x * 0.6f;
+    ImGui::PushItemWidth(w);
+    
+    static float initial_fov = 45.0f; // Keep this static for initialization
+    if (m_selected_videocam >= 0) 
+    {
+        // Initialize both current and initial FOV when camera is selected
+        static int prev_selected_cam = -1;
+        if (prev_selected_cam != m_selected_videocam)
+        {
+            m_current_fov = m_orig_state[m_selected_videocam].field_of_view;
+            initial_fov = m_current_fov;
+            prev_selected_cam = m_selected_videocam;
+        }
+
+        bool fov_changed = false;
+        float prev_fov = m_current_fov;
+        if (ImGui::SliderFloat("##fov", &m_current_fov, 10.0f, 120.0f, "%.1f"))
+        {
+            // Round to 1 decimal place
+            m_current_fov = std::round(m_current_fov * 10.0f) / 10.0f;
+            if (m_current_fov != prev_fov)
+            {
+                fov_changed = true;
+            }
+        }
+
+        if (fov_changed)
+        {
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_ogre_camera->setFOVy(Ogre::Degree(m_current_fov));
+        }
+    }
+
+    if (ImGui::Button(_LC("VidcamUtil", "Reset##fov")))
+    {
+        m_current_fov = initial_fov;
+        std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+        vcams[m_selected_videocam].vcam_ogre_camera->setFOVy(Ogre::Degree(m_current_fov));
     }
 
     ImGui::EndGroup();
