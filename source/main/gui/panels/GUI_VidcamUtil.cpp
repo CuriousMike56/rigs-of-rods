@@ -64,12 +64,13 @@ void VidcamUtil::SetVisible(bool v)
 {
     m_is_visible = v;
     m_show_base_nodes = false; // Reset debug view when window is opened/closed
+    m_camera_order.clear(); // Clear previous order
+    m_orig_state.clear();
+    m_selected_videocam = -1;
+
     if (v)
     {
         m_actor = App::GetGameContext()->GetPlayerActor();
-        m_selected_videocam = -1;
-        m_orig_state.clear();
-        m_camera_order.clear(); // Clear previous order
 
         // Store initial states of all cameras
         if (m_actor)
@@ -116,15 +117,12 @@ void VidcamUtil::SetVisible(bool v)
 
 void VidcamUtil::Draw()
 {
-
-    // Get current vehicle
+    // Get current vehicle and reset everything if it changed
     ActorPtr current_actor = App::GetGameContext()->GetPlayerActor();
-    
-    // Reset selection if vehicle changed
     if (current_actor != m_actor)
     {
-        m_actor = current_actor;
-        m_selected_videocam = -1;
+        // Re-initialize with new actor
+        SetVisible(m_is_visible);
     }
 
     if (!m_is_visible)
