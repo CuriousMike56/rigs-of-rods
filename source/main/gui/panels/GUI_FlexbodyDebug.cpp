@@ -271,7 +271,6 @@ void FlexbodyDebug::Draw()
                 flexbody->computeFlexbody();
                 flexbody->updateFlexbodyVertexBuffers();
             }
-            this->DrawOffsetRotationReset(flexbody);
         }
         else if (prop)
         {
@@ -514,18 +513,6 @@ bool FlexbodyDebug::DrawOffsetRotationEdit(Ogre::Vector3& offset, Ogre::Quaterni
     return changed;
 }
 
-void FlexbodyDebug::DrawOffsetRotationReset(FlexBody* flexbody)
-{
-    if (ImGui::Button("Reset position & rotation"))
-    {
-        flexbody->EndEditMode();
-        m_is_editing = false;
-        m_values_initialized = false;
-        
-        flexbody->UpdateFlexbodyPosition();
-    }
-}
-
 void FlexbodyDebug::AnalyzeFlexbodies()
 {
     // Clear selections
@@ -549,14 +536,16 @@ void FlexbodyDebug::AnalyzeFlexbodies()
         m_edit_offset = flexbody->GetInitialOffset();
         m_edit_rotation = flexbody->GetInitialRotation();
 
-        // Initialize transform storage
+        // Store initial transform for ALL flexbodies
         m_element_transforms.clear();
         m_element_transforms.resize(actor->GetGfxActor()->GetFlexbodies().size());
-
-        // Store initial transform for selected flexbody
-        m_element_transforms[0].offset = flexbody->GetInitialOffset();
-        m_element_transforms[0].rotation = flexbody->GetInitialRotation();
-        m_element_transforms[0].initialized = true;
+        for (size_t i = 0; i < actor->GetGfxActor()->GetFlexbodies().size(); i++)
+        {
+            FlexBody* fb = actor->GetGfxActor()->GetFlexbodies()[i];
+            m_element_transforms[i].offset = fb->GetInitialOffset();
+            m_element_transforms[i].rotation = fb->GetInitialRotation();
+            m_element_transforms[i].initialized = true;
+        }
     }
     // Otherwise check for props
     else if (actor->GetGfxActor()->getProps().size() > 0)
@@ -567,10 +556,10 @@ void FlexbodyDebug::AnalyzeFlexbodies()
         m_edit_offset = prop.pp_offset;
         m_raw_angles = prop.pp_rota;
 
-        // Initialize prop state storage
+        // Store initial values for ALL props
         m_prop_initial_offsets.clear();
         m_prop_initial_rotations.clear();
-        for (Prop const& p : actor->GetGfxActor()->getProps())
+        for (const Prop& p : actor->GetGfxActor()->getProps())
         {
             m_prop_initial_offsets.push_back(p.pp_offset);
             m_prop_initial_rotations.push_back(p.pp_rota);
@@ -1001,19 +990,24 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
             m_is_editing = true;
         }
 
-        // Position
-        pos[0] = flexbody->GetInitialOffset().x;
-        pos[1] = flexbody->GetInitialOffset().y;
-        pos[2] = flexbody->GetInitialOffset().z;
+        // Get initial values for the current flexbody
+        if (m_selected_flexbody >= 0 && m_selected_flexbody < (int)m_element_transforms.size() 
+            && m_element_transforms[m_selected_flexbody].initialized)
+        {
+            Ogre::Vector3 initial_offset = m_element_transforms[m_selected_flexbody].offset;
+            pos[0] = initial_offset.x;
+            pos[1] = initial_offset.y;
+            pos[2] = initial_offset.z;
 
-        // Extract Euler angles from quaternion
-        Ogre::Matrix3 rot_matrix;
-        flexbody->GetInitialRotation().ToRotationMatrix(rot_matrix);
-        Ogre::Radian pitch, yaw, roll;
-        rot_matrix.ToEulerAnglesXYZ(pitch, yaw, roll);
-        rot[0] = pitch.valueDegrees();
-        rot[1] = yaw.valueDegrees();
-        rot[2] = roll.valueDegrees();
+            // Extract Euler angles from the initial quaternion
+            Ogre::Matrix3 rot_matrix;
+            m_element_transforms[m_selected_flexbody].rotation.ToRotationMatrix(rot_matrix);
+            Ogre::Radian pitch, yaw, roll;
+            rot_matrix.ToEulerAnglesXYZ(pitch, yaw, roll);
+            rot[0] = pitch.valueDegrees();
+            rot[1] = yaw.valueDegrees();
+            rot[2] = roll.valueDegrees();
+        }
 
         m_values_initialized = true;
     }
@@ -1049,6 +1043,40 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
         flexbody->UpdateFlexbodyPosition();
 
         changed = true;
+    }
+
+    // Reset button functionality
+    if (ImGui::Button("Reset position & rotation"))
+    {
+        if (m_selected_flexbody >= 0 && m_selected_flexbody < (int)m_element_transforms.size() 
+            && m_element_transforms[m_selected_flexbody].initialized)
+        {
+            // Restore initial values
+            Ogre::Vector3 initial_offset = m_element_transforms[m_selected_flexbody].offset;
+            Ogre::Quaternion initial_rotation = m_element_transforms[m_selected_flexbody].rotation;
+
+            // Update the flexbody
+            flexbody->UpdateCurrentOffset(initial_offset);
+            flexbody->UpdateCurrentRotation(initial_rotation);
+            flexbody->UpdateFlexbodyPosition();
+
+            // Update UI values
+            pos[0] = initial_offset.x;
+            pos[1] = initial_offset.y;
+            pos[2] = initial_offset.z;
+
+            // Extract Euler angles
+            Ogre::Matrix3 rot_matrix;
+            initial_rotation.ToRotationMatrix(rot_matrix);
+            Ogre::Radian pitch, yaw, roll;
+            rot_matrix.ToEulerAnglesXYZ(pitch, yaw, roll);
+            rot[0] = pitch.valueDegrees();
+            rot[1] = yaw.valueDegrees();
+            rot[2] = roll.valueDegrees();
+
+            m_offset_rot_changed = true;
+            changed = true;
+        }
     }
 
     return changed;
