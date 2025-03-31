@@ -70,7 +70,6 @@ void FlexbodyDebug::Draw()
         {
             show_locator.resize(actor->GetGfxActor()->GetFlexbodies()[m_combo_selection]->getVertexCount(), false);
         }
-        // NEW: Reset UI state and load the selected element's transform
         m_values_initialized = false;
         if (m_combo_props_start == -1 || m_combo_selection < m_combo_props_start)
         {
@@ -477,24 +476,32 @@ void FlexbodyDebug::DrawOffsetRotationReset(Prop* prop)
     // Reset rotation button
     if (ImGui::Button("Reset rotation##rot"))
     {
-        // Reset angles to default 
-        prop->pp_rota = Ogre::Vector3::ZERO;
-
-        // Build quaternion in same order as ActorSpawner (Z->Y->X) 
-        prop->pp_rot = Ogre::Quaternion::IDENTITY;
-        
-        // Update prop rotation
-        if (prop->pp_scene_node)
+        // Get prop index in stored vector
+        int propIndex = m_combo_selection - m_combo_props_start;
+        // Check bounds to avoid crash
+        if (propIndex >= 0 && propIndex < (int)m_prop_initial_rotations.size())
         {
-            prop->pp_scene_node->setOrientation(prop->pp_rot);
-        }
-        if (prop->pp_wheel_scene_node)
-        {
-            prop->pp_wheel_scene_node->setOrientation(prop->pp_rot);
-        }
+            // Restore initial rotation angles
+            prop->pp_rota = m_prop_initial_rotations[propIndex];
 
-        m_offset_rot_changed = true;
-        m_values_initialized = false; // Force input fields to update
+            // Build quaternion in same order as ActorSpawner (Z->Y->X)
+            prop->pp_rot = Ogre::Quaternion(Ogre::Degree(prop->pp_rota.z), Ogre::Vector3::UNIT_Z) *  // Roll first!
+                          Ogre::Quaternion(Ogre::Degree(prop->pp_rota.y), Ogre::Vector3::UNIT_Y) *   // Then yaw
+                          Ogre::Quaternion(Ogre::Degree(prop->pp_rota.x), Ogre::Vector3::UNIT_X);    // Then pitch
+
+            // Update prop rotation
+            if (prop->pp_scene_node)
+            {
+                prop->pp_scene_node->setOrientation(prop->pp_rot);
+            }
+            if (prop->pp_wheel_scene_node)
+            {
+                prop->pp_wheel_scene_node->setOrientation(prop->pp_rot);
+            }
+
+            m_offset_rot_changed = true;
+            m_values_initialized = false; // Force input fields to update
+        }
     }
 }
 
@@ -574,12 +581,13 @@ void FlexbodyDebug::AnalyzeFlexbodies()
 
         if (m_combo_selection == -1)
             m_combo_selection = 0;
-
-        // NEW: Initialize stored initial offsets for props
+            
         m_prop_initial_offsets.clear();
+        m_prop_initial_rotations.clear(); // Clear previous rotations
         for (Prop const& p : actor->GetGfxActor()->getProps())
         {
             m_prop_initial_offsets.push_back(p.pp_offset);
+            m_prop_initial_rotations.push_back(p.pp_rota); // Store initial rotation angles
         }
     }
 
@@ -1177,7 +1185,7 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     }
 
     // Position sliders
-    ImGui::Text("Position offset relative to reference nodes:");
+    ImGui::Text("Position offset:");
     bool pos_changed = false;
     pos_changed |= ImGui::SliderFloat("X offset", &pos[0], -10.0f, 10.0f, "%.3f");
     pos_changed |= ImGui::SliderFloat("Y offset", &pos[1], -10.0f, 10.0f, "%.3f");
