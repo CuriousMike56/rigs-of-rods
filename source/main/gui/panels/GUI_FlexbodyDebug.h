@@ -51,9 +51,7 @@ private:
     void DrawMemoryOrderGraph(FlexBody* flexbody);
     bool DrawOffsetRotationEdit(Ogre::Vector3& offset, Ogre::Quaternion& rotation); // Changed param type
     void DrawOffsetRotationReset(FlexBody* flexbody);
-    void DrawOffsetRotationReset(Prop* prop);
-
-    // Add these new method declarations
+    
     void DrawLocatorsTable(FlexBody* flexbody, bool& locators_visible);
     void DrawMeshInfo(FlexBody* flexbody); 
     void DrawMeshInfo(Prop* prop);

@@ -194,7 +194,6 @@ void FlexbodyDebug::Draw()
         else if (prop)
         {
             values_changed = this->DrawPropOffsetRotationEdit(prop);
-            this->DrawOffsetRotationReset(prop);
         }
         m_offset_rot_changed = m_offset_rot_changed || values_changed;
     }
@@ -440,68 +439,6 @@ void FlexbodyDebug::DrawOffsetRotationReset(FlexBody* flexbody)
         m_values_initialized = false;
         
         flexbody->UpdateFlexbodyPosition();
-    }
-}
-
-void FlexbodyDebug::DrawOffsetRotationReset(Prop* prop)
-{
-    // Reset position button
-    if (ImGui::Button("Reset position##pos"))
-    {
-        // Get prop index in stored vector
-        int propIndex = m_combo_selection - m_combo_props_start;
-        // Check bounds to avoid crash
-        if (propIndex >= 0 && propIndex < (int)m_prop_initial_offsets.size())
-        {
-            m_edit_offset = m_prop_initial_offsets[propIndex];
-            prop->pp_offset = m_edit_offset;
-            
-            // Update prop position
-            if (prop->pp_scene_node)
-            {
-                prop->pp_scene_node->setPosition(m_edit_offset);
-            }
-            if (prop->pp_wheel_scene_node)
-            {
-                prop->pp_wheel_scene_node->setPosition(m_edit_offset);
-            }
-
-            m_offset_rot_changed = true;
-            m_values_initialized = false; // Force input fields to update
-        }
-    }
-
-    ImGui::SameLine();
-
-    // Reset rotation button
-    if (ImGui::Button("Reset rotation##rot"))
-    {
-        // Get prop index in stored vector
-        int propIndex = m_combo_selection - m_combo_props_start;
-        // Check bounds to avoid crash
-        if (propIndex >= 0 && propIndex < (int)m_prop_initial_rotations.size())
-        {
-            // Restore initial rotation angles
-            prop->pp_rota = m_prop_initial_rotations[propIndex];
-
-            // Build quaternion in same order as ActorSpawner (Z->Y->X)
-            prop->pp_rot = Ogre::Quaternion(Ogre::Degree(prop->pp_rota.z), Ogre::Vector3::UNIT_Z) *  // Roll first!
-                          Ogre::Quaternion(Ogre::Degree(prop->pp_rota.y), Ogre::Vector3::UNIT_Y) *   // Then yaw
-                          Ogre::Quaternion(Ogre::Degree(prop->pp_rota.x), Ogre::Vector3::UNIT_X);    // Then pitch
-
-            // Update prop rotation
-            if (prop->pp_scene_node)
-            {
-                prop->pp_scene_node->setOrientation(prop->pp_rot);
-            }
-            if (prop->pp_wheel_scene_node)
-            {
-                prop->pp_wheel_scene_node->setOrientation(prop->pp_rot);
-            }
-
-            m_offset_rot_changed = true;
-            m_values_initialized = false; // Force input fields to update
-        }
     }
 }
 
@@ -1125,14 +1062,14 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
     }
 
     // Position sliders
-    ImGui::Text("Position offset from reference node:");
+    ImGui::Text("Position offset:");
     bool pos_changed = false;
     pos_changed |= ImGui::SliderFloat("X offset", &pos[0], -10.0f, 10.0f, "%.3f");
     pos_changed |= ImGui::SliderFloat("Y offset", &pos[1], -10.0f, 10.0f, "%.3f");
     pos_changed |= ImGui::SliderFloat("Z offset", &pos[2], -10.0f, 10.0f, "%.3f");
 
     // Rotation sliders
-    ImGui::Text("Rotation (degrees, applied in X->Y->Z order):");
+    ImGui::Text("Rotation (degrees):");
     bool rot_changed = false;
     rot_changed |= ImGui::SliderFloat("Pitch (X)", &rot[0], -180.0f, 180.0f, "%.1f");
     rot_changed |= ImGui::SliderFloat("Yaw (Y)", &rot[1], -180.0f, 180.0f, "%.1f");  
@@ -1191,12 +1128,77 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     pos_changed |= ImGui::SliderFloat("Y offset", &pos[1], -10.0f, 10.0f, "%.3f");
     pos_changed |= ImGui::SliderFloat("Z offset", &pos[2], -10.0f, 10.0f, "%.3f");
 
-    // Rotation sliders - note Z->Y->X order to match ActorSpawner
+    // Reset position button
+    if (ImGui::Button("Reset##pos"))
+    {
+        // Get prop index in stored vector
+        int propIndex = m_combo_selection - m_combo_props_start;
+        // Check bounds to avoid crash
+        if (propIndex >= 0 && propIndex < (int)m_prop_initial_offsets.size())
+        {
+            m_edit_offset = m_prop_initial_offsets[propIndex];
+            prop->pp_offset = m_edit_offset;
+            
+            // Update prop position
+            if (prop->pp_scene_node)
+            {
+                prop->pp_scene_node->setPosition(m_edit_offset);
+            }
+            if (prop->pp_wheel_scene_node)
+            {
+                prop->pp_wheel_scene_node->setPosition(m_edit_offset);
+            }
+
+            // Update local values
+            pos[0] = m_edit_offset.x;
+            pos[1] = m_edit_offset.y;
+            pos[2] = m_edit_offset.z;
+
+            m_offset_rot_changed = true;
+            changed = true;
+        }
+    }
+
+    // Rotation sliders
     ImGui::Text("Rotation (degrees):");
     bool rot_changed = false;
-    rot_changed |= ImGui::SliderFloat("Roll (Z)", &rot[2], -180.0f, 180.0f, "%.1f");    // First! 
-    rot_changed |= ImGui::SliderFloat("Yaw (Y)", &rot[1], -180.0f, 180.0f, "%.1f");     // Second!
-    rot_changed |= ImGui::SliderFloat("Pitch (X)", &rot[0], -180.0f, 180.0f, "%.1f");   // Last!
+    rot_changed |= ImGui::SliderFloat("Pitch (X)", &rot[0], -180.0f, 180.0f, "%.1f");
+    rot_changed |= ImGui::SliderFloat("Yaw (Y)", &rot[1], -180.0f, 180.0f, "%.1f");
+    rot_changed |= ImGui::SliderFloat("Roll (Z)", &rot[2], -180.0f, 180.0f, "%.1f");
+
+    // Reset rotation button
+    if (ImGui::Button("Reset##rot"))
+    {
+        // Get prop index in stored vector
+        int propIndex = m_combo_selection - m_combo_props_start;
+        // Check bounds to avoid crash
+        if (propIndex >= 0 && propIndex < (int)m_prop_initial_rotations.size())
+        {
+            // Restore initial rotation angles and update local values
+            prop->pp_rota = m_prop_initial_rotations[propIndex];
+            rot[0] = prop->pp_rota.x;
+            rot[1] = prop->pp_rota.y;
+            rot[2] = prop->pp_rota.z;
+
+            // Build quaternion in same order as ActorSpawner (Z->Y->X)
+            prop->pp_rot = Ogre::Quaternion(Ogre::Degree(rot[2]), Ogre::Vector3::UNIT_Z) *  // Roll first!
+                          Ogre::Quaternion(Ogre::Degree(rot[1]), Ogre::Vector3::UNIT_Y) *   // Then yaw
+                          Ogre::Quaternion(Ogre::Degree(rot[0]), Ogre::Vector3::UNIT_X);    // Then pitch
+
+            // Update prop rotation
+            if (prop->pp_scene_node)
+            {
+                prop->pp_scene_node->setOrientation(prop->pp_rot);
+            }
+            if (prop->pp_wheel_scene_node)
+            {
+                prop->pp_wheel_scene_node->setOrientation(prop->pp_rot);
+            }
+
+            m_offset_rot_changed = true;
+            changed = true;
+        }
+    }
 
     if (pos_changed || rot_changed)
     {
