@@ -58,6 +58,9 @@ private:
     void DrawMeshInfo(FlexBody* flexbody); 
     void DrawMeshInfo(Prop* prop);
 
+    bool DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody);
+    bool DrawPropOffsetRotationEdit(Prop* prop);
+
     // For editing offset/rotation
     struct ElementTransform
     {

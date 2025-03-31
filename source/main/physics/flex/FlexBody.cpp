@@ -954,18 +954,17 @@ void FlexBody::UpdateFlexbodyPosition()
 
     if (m_offset_rot_changed)
     {
-        // Store current edit transform
-        m_edit_offset = m_scene_node->getPosition() - ref_pos;
-        m_edit_rotation = m_scene_node->getOrientation() * ref_rot.Inverse();
+        m_center_offset = m_edit_offset;          // Store edited offset
+        m_initial_rotation = m_edit_rotation;     // Store edited rotation
         m_offset_rot_changed = false;
         m_is_edit_mode = true;
     }
     
     if (m_is_edit_mode)
     {
-        // Apply stored edit transform on top of reference transform
-        m_scene_node->setPosition(ref_pos + ref_rot * m_edit_offset);
-        m_scene_node->setOrientation(ref_rot * m_edit_rotation);
+        // Apply edited transform relative to reference frame
+        m_scene_node->setPosition(ref_pos + ref_rot * m_center_offset);
+        m_scene_node->setOrientation(ref_rot * m_initial_rotation);
     }
     else
     {

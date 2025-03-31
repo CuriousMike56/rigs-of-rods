@@ -32,6 +32,9 @@
 #include <Ogre.h>
 
 namespace RoR {
+namespace GUI {
+    class FlexbodyDebug;
+}
 
 /// @addtogroup Gfx
 /// @{
@@ -44,6 +47,7 @@ class FlexBody
 {
     friend class RoR::FlexFactory;
     friend class RoR::FlexBodyFileIO;
+    friend class RoR::GUI::FlexbodyDebug;
 
     FlexBody( // Private, for FlexFactory
         RoR::FlexBodyCacheData* preloaded_from_cache,
@@ -128,7 +132,16 @@ public:
     Ogre::Vector3 GetInitialOffset() const { return m_center_offset; }
     Ogre::Quaternion GetInitialRotation() const { return m_initial_rotation; }
 
+    void SetInitialOffset(const Ogre::Vector3& offset) { m_center_offset = offset; }
+    void SetInitialRotation(const Ogre::Quaternion& rot) { m_initial_rotation = rot; }
+
     bool isValid() const { return (m_scene_node != nullptr); }
+
+    // Add these methods
+    void BeginEditMode() { m_is_edit_mode = true; m_edit_offset = m_center_offset; m_edit_rotation = m_initial_rotation; }
+    void EndEditMode() { m_is_edit_mode = false; }
+    void UpdateCurrentRotation(const Ogre::Quaternion& rot) { m_edit_rotation = rot; m_offset_rot_changed = true; }
+    void UpdateCurrentOffset(const Ogre::Vector3& offset) { m_edit_offset = offset; m_offset_rot_changed = true; }
 
 private:
 
