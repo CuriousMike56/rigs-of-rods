@@ -42,6 +42,7 @@ using namespace GUI;
 void FlexbodyDebug::Draw()
 {
     ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(1500, 1000), ImGuiCond_FirstUseEver);
     ImGuiWindowFlags win_flags = ImGuiWindowFlags_NoCollapse;
     bool keep_open = true;
     ImGui::Begin(_LC("FlexbodyDebug", "Flexbody/Prop debug"), &keep_open, win_flags);
@@ -62,14 +63,18 @@ void FlexbodyDebug::Draw()
         return;
     }
 
-    // Add tab bar
+    // Create two columns for side-by-side layout
+    ImGui::Columns(2, "flex_debug_columns", true);
+    ImGui::SetColumnWidth(0, 470);
+
+    // Left column: List of meshes
     ImGui::BeginTabBar("Selection");
     if (ImGui::BeginTabItem("Flexbodies"))
     {
         m_selected_tab = 0;
         
         // List flexbodies in child window with fixed height
-        ImGui::BeginChild("flexbody_list", ImVec2(200, 300), true);
+        ImGui::BeginChild("flexbody_list", ImVec2(-1, -1), true);
         for (size_t i = 0; i < actor->GetGfxActor()->GetFlexbodies().size(); i++)
         {
             FlexBody* fb = actor->GetGfxActor()->GetFlexbodies()[i];
@@ -109,7 +114,7 @@ void FlexbodyDebug::Draw()
         m_selected_tab = 1;
         
         // List props in child window with fixed height  
-        ImGui::BeginChild("prop_list", ImVec2(200, 300), true);
+        ImGui::BeginChild("prop_list", ImVec2(-1, -1), true);
         for (size_t i = 0; i < actor->GetGfxActor()->getProps().size(); i++)
         {
             Prop& p = actor->GetGfxActor()->getProps()[i];
@@ -162,6 +167,9 @@ void FlexbodyDebug::Draw()
         ImGui::EndTabItem();
     }
     ImGui::EndTabBar();
+
+    // Right column: Options and controls
+    ImGui::NextColumn();
 
     // Continue with the rest of Draw()...
     if (ImGui::Checkbox("Hide other (note: pauses reflections)", &this->hide_other_elements))
@@ -285,6 +293,8 @@ void FlexbodyDebug::Draw()
         ImGui::Text("X: %d", flexbody->getXNode());
         ImGui::Text("Y: %d", flexbody->getYNode());
     }
+
+    ImGui::Columns(1); // End columns
 
     m_is_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
     App::GetGuiManager()->RequestGuiCaptureKeyboard(m_is_hovered);
