@@ -90,10 +90,15 @@ private:
     bool hide_other_elements = false;
     std::vector<bool> show_locator;
 
-    // Flexbody and prop selection combobox
-    std::string m_combo_items; //!< Flexbodies come first, props second
-    int m_combo_props_start = -1; //!< Index of first prop in the combobox. -1 means no props.
-    int m_combo_selection = 0;
+    // Remove old combo selection variables:
+    // std::string m_combo_items;
+    // int m_combo_props_start = -1;
+    // int m_combo_selection = 0;
+
+    // Add tab-based selection variables:
+    int m_selected_tab = 0;        // 0 = Flexbodies, 1 = Props 
+    int m_selected_flexbody = -1;  // Index in flexbodies vector
+    int m_selected_prop = -1;      // Index in props vector
 
     // Window state
     bool m_is_visible = false;

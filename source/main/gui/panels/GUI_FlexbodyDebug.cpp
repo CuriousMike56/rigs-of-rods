@@ -62,34 +62,108 @@ void FlexbodyDebug::Draw()
         return;
     }
 
-    if (ImGui::Combo(_LC("FlexbodyDebug", "Select element"), &m_combo_selection, m_combo_items.c_str()))
+    // Add tab bar
+    ImGui::BeginTabBar("Selection");
+    if (ImGui::BeginTabItem("Flexbodies"))
     {
-        this->UpdateVisibility();
-        show_locator.resize(0);
-        if (m_combo_selection < m_combo_props_start)
+        m_selected_tab = 0;
+        
+        // List flexbodies in child window with fixed height
+        ImGui::BeginChild("flexbody_list", ImVec2(200, 300), true);
+        for (size_t i = 0; i < actor->GetGfxActor()->GetFlexbodies().size(); i++)
         {
-            show_locator.resize(actor->GetGfxActor()->GetFlexbodies()[m_combo_selection]->getVertexCount(), false);
+            FlexBody* fb = actor->GetGfxActor()->GetFlexbodies()[i];
+            std::string label;
+            if (fb->getPlaceholderType() == FlexBody::PlaceholderType::NOT_A_PLACEHOLDER)
+            {
+                label = fmt::format("[{}] {} ({} verts -> {} nodes)",
+                    i, fb->getOrigMeshName(), fb->getVertexCount(), fb->getForsetNodes().size());
+            }
+            else
+            {
+                label = fmt::format("[{}] {} ({})",
+                    i, fb->getOrigMeshName(), FlexBody::PlaceholderTypeToString(fb->getPlaceholderType()));
+            }
+
+            if (ImGui::Selectable(label.c_str(), m_selected_flexbody == i))
+            {
+                if (m_selected_flexbody != i)
+                {
+                    m_selected_flexbody = i;
+                    m_selected_prop = -1;
+                    show_locator.resize(0);
+                    show_locator.resize(fb->getVertexCount(), false);
+                    m_values_initialized = false;
+                    m_edit_offset = fb->GetInitialOffset();
+                    m_edit_rotation = fb->GetInitialRotation();
+                    this->UpdateVisibility();
+                }
+            }
         }
-        m_values_initialized = false;
-        if (m_combo_props_start == -1 || m_combo_selection < m_combo_props_start)
-        {
-            FlexBody* flexbody = actor->GetGfxActor()->GetFlexbodies()[m_combo_selection];
-            m_edit_offset = flexbody->GetInitialOffset();
-            m_edit_rotation = flexbody->GetInitialRotation();
-        }
-        else
-        {
-            Prop& prop = actor->GetGfxActor()->getProps()[m_combo_selection - m_combo_props_start];
-            m_edit_offset = prop.pp_offset;
-            m_raw_angles.x = (prop.pp_rot.x - 0.5f) * 180.0f;
-            m_raw_angles.y = prop.pp_rot.y * 180.0f;
-            m_raw_angles.z = prop.pp_rot.z * 180.0f;
-            m_edit_rotation =
-                Ogre::Quaternion(Ogre::Degree(m_raw_angles.x), Ogre::Vector3::UNIT_X) *
-                Ogre::Quaternion(Ogre::Degree(m_raw_angles.y), Ogre::Vector3::UNIT_Y) *
-                Ogre::Quaternion(Ogre::Degree(m_raw_angles.z), Ogre::Vector3::UNIT_Z);
-        }
+        ImGui::EndChild();
+        ImGui::EndTabItem();
     }
+
+    if (ImGui::BeginTabItem("Props"))
+    {
+        m_selected_tab = 1;
+        
+        // List props in child window with fixed height  
+        ImGui::BeginChild("prop_list", ImVec2(200, 300), true);
+        for (size_t i = 0; i < actor->GetGfxActor()->getProps().size(); i++)
+        {
+            Prop& p = actor->GetGfxActor()->getProps()[i];
+            std::string caption;
+            if (p.pp_beacon_type == 'L' || p.pp_beacon_type == 'R' || p.pp_beacon_type == 'w')
+            {
+                caption = fmt::format("[{}] Aerial nav light '{}'", i, p.pp_beacon_type);
+            }
+            else if (p.pp_wheel_mesh_obj)
+            {
+                if (p.pp_mesh_obj->getLoadedMesh() && p.pp_wheel_mesh_obj->getLoadedMesh())
+                {
+                    caption = fmt::format("[{}] Dashboard '{}' + dirwheel '{}'",
+                        i, p.pp_mesh_obj->getLoadedMesh()->getName(), p.pp_wheel_mesh_obj->getLoadedMesh()->getName());
+                }
+                else if (!p.pp_mesh_obj->getLoadedMesh() && p.pp_wheel_mesh_obj->getLoadedMesh())
+                {
+                    caption = fmt::format("[{}] Dirwheel '{}'", i, p.pp_wheel_mesh_obj->getLoadedMesh()->getName());
+                }
+                else
+                {
+                    caption = fmt::format("[{}] Corrupted dashboard prop", i);
+                }
+            }
+            else if (p.pp_mesh_obj && p.pp_mesh_obj->getLoadedMesh())
+            {
+                caption = fmt::format("[{}] {}", i, p.pp_mesh_obj->getLoadedMesh()->getName());
+            }
+            else
+            {
+                caption = fmt::format("[{}] Corrupted prop", i);
+            }
+
+            if (ImGui::Selectable(caption.c_str(), m_selected_prop == i))
+            {
+                if (m_selected_prop != i)
+                {
+                    m_selected_prop = i;
+                    m_selected_flexbody = -1;
+                    m_values_initialized = false;
+                    m_edit_offset = p.pp_offset;
+                    m_raw_angles.x = p.pp_rota.x;
+                    m_raw_angles.y = p.pp_rota.y;  
+                    m_raw_angles.z = p.pp_rota.z;
+                    this->UpdateVisibility();
+                }
+            }
+        }
+        ImGui::EndChild();
+        ImGui::EndTabItem();
+    }
+    ImGui::EndTabBar();
+
+    // Continue with the rest of Draw()...
     if (ImGui::Checkbox("Hide other (note: pauses reflections)", &this->hide_other_elements))
     {
         this->UpdateVisibility();
@@ -103,9 +177,9 @@ void FlexbodyDebug::Draw()
     NodeNum_t node_ref = NODENUM_INVALID, node_x = NODENUM_INVALID, node_y = NODENUM_INVALID;
     std::string mesh_name;
     if (actor->GetGfxActor()->getProps().size() > 0
-        && m_combo_selection >= m_combo_props_start)
+        && m_selected_prop >= 0)
     {
-        prop = &actor->GetGfxActor()->getProps()[m_combo_selection - m_combo_props_start];
+        prop = &actor->GetGfxActor()->getProps()[m_selected_prop];
         node_ref = prop->pp_node_ref;
         node_x = prop->pp_node_x;
         node_y = prop->pp_node_y;
@@ -118,7 +192,7 @@ void FlexbodyDebug::Draw()
     }
     else
     {
-        flexbody = actor->GetGfxActor()->GetFlexbodies()[m_combo_selection];
+        flexbody = actor->GetGfxActor()->GetFlexbodies()[m_selected_flexbody];
         if (flexbody->getPlaceholderType() == FlexBody::PlaceholderType::NOT_A_PLACEHOLDER)
         {
             mat = flexbody->getEntity()->getSubEntity(0)->getMaterial();
@@ -245,7 +319,7 @@ bool FlexbodyDebug::DrawOffsetRotationEdit(Ogre::Vector3& offset, Ogre::Quaterni
         pos[1] = offset.y;
         pos[2] = offset.z;
 
-        if (m_combo_selection >= m_combo_props_start)
+        if (m_selected_prop >= 0)
         {
             // For props: use the stored raw angles (in degrees)
             rot[0] = m_raw_angles.x; // Pitch
@@ -386,7 +460,7 @@ bool FlexbodyDebug::DrawOffsetRotationEdit(Ogre::Vector3& offset, Ogre::Quaterni
         offset.z = pos[2];
 
         // For props, use the same order as originally parsed from the truck file:
-        if (m_combo_selection >= m_combo_props_start)
+        if (m_selected_prop >= 0)
         {
              rotation = Ogre::Quaternion(Ogre::Degree(rot[1]), Ogre::Vector3::UNIT_Y) *
                         Ogre::Quaternion(Ogre::Degree(rot[0]), Ogre::Vector3::UNIT_X) *
@@ -444,180 +518,57 @@ void FlexbodyDebug::DrawOffsetRotationReset(FlexBody* flexbody)
 
 void FlexbodyDebug::AnalyzeFlexbodies()
 {
-    // Reset
-    m_combo_items = "";
-    m_combo_props_start = -1;
-    m_combo_selection = -1;
+    // Clear selections
+    m_selected_tab = 0;
+    m_selected_flexbody = -1;
+    m_selected_prop = -1;
+    m_values_initialized = false;
+    show_locator.resize(0);
 
-    // Var
-    int num_combo_items = 0;
-
-    // Analyze flexbodies
+    // Get current vehicle
     ActorPtr actor = App::GetGameContext()->GetPlayerActor();
-    if (actor && actor->GetGfxActor()->GetFlexbodies().size() > 0)
+    if (!actor)
+        return;
+
+    // Initialize if there are any flexbodies
+    if (actor->GetGfxActor()->GetFlexbodies().size() > 0)
     {
-        for (FlexBody* fb : actor->GetGfxActor()->GetFlexbodies())
-        {
-            if (fb->getPlaceholderType() == FlexBody::PlaceholderType::NOT_A_PLACEHOLDER)
-            {
-                ImAddItemToComboboxString(m_combo_items, fmt::format("{} ({} verts -> {} nodes)",
-                    fb->getOrigMeshName(), fb->getVertexCount(), fb->getForsetNodes().size()));
-            }
-            else
-            {
-                ImAddItemToComboboxString(m_combo_items, fmt::format("{} ({})",
-                    fb->getOrigMeshName(), FlexBody::PlaceholderTypeToString(fb->getPlaceholderType())));
-                
-            }
-            num_combo_items++;
-        }
+        m_selected_flexbody = 0;
+        FlexBody* flexbody = actor->GetGfxActor()->GetFlexbodies()[0];
+        show_locator.resize(flexbody->getVertexCount(), false);
+        m_edit_offset = flexbody->GetInitialOffset();
+        m_edit_rotation = flexbody->GetInitialRotation();
 
-        m_combo_selection = 0;
+        // Initialize transform storage
+        m_element_transforms.clear();
+        m_element_transforms.resize(actor->GetGfxActor()->GetFlexbodies().size());
 
-        show_locator.resize(0);
-        show_locator.resize(actor->GetGfxActor()->GetFlexbodies()[m_combo_selection]->getVertexCount(), false);
+        // Store initial transform for selected flexbody
+        m_element_transforms[0].offset = flexbody->GetInitialOffset();
+        m_element_transforms[0].rotation = flexbody->GetInitialRotation();
+        m_element_transforms[0].initialized = true;
     }
-
-    // Analyze props as well
-    if (actor && actor->GetGfxActor()->getProps().size() > 0)
+    // Otherwise check for props
+    else if (actor->GetGfxActor()->getProps().size() > 0)
     {
-        m_combo_props_start = num_combo_items;
-        for (Prop const& p: actor->GetGfxActor()->getProps())
-        {
-            std::string caption;
-            if (p.pp_beacon_type == 'L' || p.pp_beacon_type == 'R' || p.pp_beacon_type == 'w')
-            {
-                caption = fmt::format("(special prop - aerial nav light '{}')", p.pp_beacon_type);
-            }
-            else if (p.pp_wheel_mesh_obj)
-            {
-                if (p.pp_mesh_obj->getLoadedMesh() && p.pp_wheel_mesh_obj->getLoadedMesh())
-                {
-                    caption = fmt::format("(special prop: dashboard '{}' + dirwheel '{}')", p.pp_mesh_obj->getLoadedMesh()->getName(), p.pp_wheel_mesh_obj->getLoadedMesh()->getName());
-                }
-                else if (!p.pp_mesh_obj->getLoadedMesh() && p.pp_wheel_mesh_obj->getLoadedMesh())
-                {
-                    caption = fmt::format("(special prop: no dashboard + dirwheel '{}')", p.pp_wheel_mesh_obj->getLoadedMesh()->getName());
-                }
-                else
-                {
-                    caption = "(corrupted dashboard prop - no meshes loaded)";
-                }
-            }
-            else if (p.pp_mesh_obj && p.pp_mesh_obj->getLoadedMesh())
-            {
-                caption = fmt::format("{} (prop)", p.pp_mesh_obj->getLoadedMesh()->getName());
-            }
-            else
-            {
-                caption = "(corrupted prop - mesh not loaded)";
-            }
-            ImAddItemToComboboxString(m_combo_items, caption);
-            num_combo_items++;
-        }
+        m_selected_tab = 1;
+        m_selected_prop = 0;
+        Prop& prop = actor->GetGfxActor()->getProps()[0];
+        m_edit_offset = prop.pp_offset;
+        m_raw_angles = prop.pp_rota;
 
-        if (m_combo_selection == -1)
-            m_combo_selection = 0;
-            
+        // Initialize prop state storage
         m_prop_initial_offsets.clear();
-        m_prop_initial_rotations.clear(); // Clear previous rotations
+        m_prop_initial_rotations.clear();
         for (Prop const& p : actor->GetGfxActor()->getProps())
         {
             m_prop_initial_offsets.push_back(p.pp_offset);
-            m_prop_initial_rotations.push_back(p.pp_rota); // Store initial rotation angles
-        }
-    }
-
-    ImTerminateComboboxString(m_combo_items);
-
-    // Initialize offset/rotation editors
-    if (actor && m_combo_selection >= 0)
-    {
-        if (m_combo_props_start == -1 || m_combo_selection < m_combo_props_start)
-        {
-            // Flexbody selected
-            FlexBody* flexbody = actor->GetGfxActor()->GetFlexbodies()[m_combo_selection];
-            m_edit_offset = flexbody->GetInitialOffset();
-            m_edit_rotation = flexbody->GetInitialRotation();
-
-            LOG(fmt::format("[RoR] DBG Flexbody init: mesh '{}' ", flexbody->getOrigMeshName()));
-
-            // Log initial rotation details - let's check if it's what we expect
-            Ogre::Matrix3 rot_matrix = Ogre::Matrix3::IDENTITY;
-            m_edit_rotation.ToRotationMatrix(rot_matrix);
-            Ogre::Radian pitch, yaw, roll;
-            rot_matrix.ToEulerAnglesXYZ(pitch, yaw, roll); // Changed to XYZ to match truck file order
-
-            LOG(fmt::format("[RoR] DBG Flexbody init: Raw constructor values - offset ({:.3f}, {:.3f}, {:.3f})", 
-                flexbody->GetInitialOffset().x, flexbody->GetInitialOffset().y, flexbody->GetInitialOffset().z));
-
-            LOG(fmt::format("[RoR] DBG Flexbody init: Processed values - offset ({:.3f}, {:.3f}, {:.3f}), rotation ({:.1f}, {:.1f}, {:.1f})", 
-                m_edit_offset.x, m_edit_offset.y, m_edit_offset.z,
-                pitch.valueDegrees(), yaw.valueDegrees(), roll.valueDegrees()));
-
-            LOG(fmt::format("[RoR] DBG Flexbody init: Will reconstruct as: pitch({:.1f}) -> yaw({:.1f}) -> roll({:.1f})",
-                pitch.valueDegrees(), yaw.valueDegrees(), roll.valueDegrees()));
-        }
-        else
-        {
-            // Prop selected  
-            Prop& prop = actor->GetGfxActor()->getProps()[m_combo_selection - m_combo_props_start];
-            m_edit_offset = prop.pp_offset;
-
-            // Set the edit rotation from the corrected raw angles:
-            m_edit_rotation =
-                Ogre::Quaternion(Ogre::Degree(m_raw_angles.x), Ogre::Vector3::UNIT_X) *
-                Ogre::Quaternion(Ogre::Degree(m_raw_angles.y), Ogre::Vector3::UNIT_Y) *
-                Ogre::Quaternion(Ogre::Degree(m_raw_angles.z), Ogre::Vector3::UNIT_Z);
-
-            LOG(fmt::format("[RoR|DBG] Prop init: raw angles from truck file - pitch:{}, yaw:{}, roll:{}",
-                m_raw_angles.x, m_raw_angles.y, m_raw_angles.z));
+            m_prop_initial_rotations.push_back(p.pp_rota);
         }
     }
 
     m_offset_rot_changed = false;
-    m_values_initialized = false; // Force re-init of input fields
-
-    // Initialize transform storage for all elements
-    m_element_transforms.clear();
-    if (actor)
-    {
-        size_t total_elements = actor->GetGfxActor()->GetFlexbodies().size() + 
-                              actor->GetGfxActor()->getProps().size();
-        m_element_transforms.resize(total_elements);
-    }
-
-    // Initialize the currently selected element's transform
-    if (actor && m_combo_selection >= 0)
-    {
-        if (m_combo_props_start == -1 || m_combo_selection < m_combo_props_start)
-        {
-            // Flexbody selected
-            FlexBody* flexbody = actor->GetGfxActor()->GetFlexbodies()[m_combo_selection];
-            m_element_transforms[m_combo_selection].offset = flexbody->GetInitialOffset();
-            m_element_transforms[m_combo_selection].rotation = flexbody->GetInitialRotation();
-            m_element_transforms[m_combo_selection].initialized = true;
-        }
-        else
-        {
-            // Prop selected
-            Prop& prop = actor->GetGfxActor()->getProps()[m_combo_selection - m_combo_props_start];
-            m_element_transforms[m_combo_selection].offset = prop.pp_offset;
-            
-            // Build rotation from Euler angles
-            m_raw_angles.x = (prop.pp_rot.x - 0.5f) * 180.0f;
-            m_raw_angles.y = prop.pp_rot.y * 180.0f;
-            m_raw_angles.z = prop.pp_rot.z * 180.0f;
-
-            m_element_transforms[m_combo_selection].rotation =
-                Ogre::Quaternion(Ogre::Degree(m_raw_angles.x), Ogre::Vector3::UNIT_X) *
-                Ogre::Quaternion(Ogre::Degree(m_raw_angles.y), Ogre::Vector3::UNIT_Y) *
-                Ogre::Quaternion(Ogre::Degree(m_raw_angles.z), Ogre::Vector3::UNIT_Z);
-            m_element_transforms[m_combo_selection].initialized = true;
-        }
-    }
-
-    m_offset_rot_changed = false;
+    m_values_initialized = false;
 }
 
 const ImVec4 FORSETNODE_COLOR_V4(1.f, 0.87f, 0.3f, 1.f);
@@ -831,23 +782,19 @@ void FlexbodyDebug::UpdateVisibility()
             flexbody->fb_camera_mode_active = CAMERA_MODE_ALWAYS_HIDDEN;
         }
 
-        // Then re-display what we need manually.
-        auto& flexbody_vec = actor->GetGfxActor()->GetFlexbodies();
-        const int combo_flexbody_selection = m_combo_selection;
-        if (combo_flexbody_selection >= 0 && combo_flexbody_selection < (int)flexbody_vec.size())
+        // Show selected element based on tab and selection
+        if (m_selected_flexbody != -1)
         {
-            flexbody_vec[combo_flexbody_selection]->fb_camera_mode_active = CAMERA_MODE_ALWAYS_VISIBLE;
+            actor->GetGfxActor()->GetFlexbodies()[m_selected_flexbody]->fb_camera_mode_active = CAMERA_MODE_ALWAYS_VISIBLE;
         }
-
-        auto& prop_vec = actor->GetGfxActor()->getProps();
-        const int combo_prop_selection = m_combo_selection - (int)flexbody_vec.size();
-        if (combo_prop_selection >= 0 && combo_prop_selection < (int)prop_vec.size())
+        else if (m_selected_prop != -1)
         {
-            prop_vec[combo_prop_selection].pp_camera_mode_active = CAMERA_MODE_ALWAYS_VISIBLE;
-            if (prop_vec[combo_prop_selection].pp_wheel_mesh_obj)
+            Prop& prop = actor->GetGfxActor()->getProps()[m_selected_prop];
+            prop.pp_camera_mode_active = CAMERA_MODE_ALWAYS_VISIBLE;
+            if (prop.pp_wheel_mesh_obj)
             {
                 // Special case: the steering wheel mesh visibility is not controlled by 'camera mode'
-                prop_vec[combo_prop_selection].pp_wheel_mesh_obj->setVisible(true);
+                prop.pp_wheel_mesh_obj->setVisible(true);
             }
         }
     }
@@ -1132,7 +1079,7 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     if (ImGui::Button("Reset##pos"))
     {
         // Get prop index in stored vector
-        int propIndex = m_combo_selection - m_combo_props_start;
+        int propIndex = m_selected_prop;
         // Check bounds to avoid crash
         if (propIndex >= 0 && propIndex < (int)m_prop_initial_offsets.size())
         {
@@ -1170,7 +1117,7 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     if (ImGui::Button("Reset##rot"))
     {
         // Get prop index in stored vector
-        int propIndex = m_combo_selection - m_combo_props_start;
+        int propIndex = m_selected_prop;
         // Check bounds to avoid crash
         if (propIndex >= 0 && propIndex < (int)m_prop_initial_rotations.size())
         {
