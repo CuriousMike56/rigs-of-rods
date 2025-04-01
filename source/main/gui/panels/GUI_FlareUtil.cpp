@@ -99,6 +99,13 @@ void FlareUtil::Draw()
             return;
         }
 
+        if (m_actor->ar_flares.size() == 0)
+        {
+            ImGui::Text("%s", _LC("FlareUtil", "This vehicle has no flares."));
+            ImGui::End();
+            return;
+        }
+
         // Vehicle info
         ImGui::Text("%s", m_actor->ar_design_name.c_str());
         ImGui::Separator();

@@ -142,6 +142,13 @@ void VidcamUtil::Draw()
             return;
         }
 
+        if (current_actor->GetGfxActor()->getVideoCameras().size() == 0)
+        {
+            ImGui::Text("%s", _LC("VidcamUtil", "This vehicle has no videocameras."));
+            ImGui::End();
+            return;
+        }
+
         // Vehicle info
         ImGui::Text("%s", m_actor->ar_design_name.c_str());
         ImGui::Separator();
