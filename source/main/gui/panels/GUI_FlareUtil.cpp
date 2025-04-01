@@ -110,35 +110,6 @@ void FlareUtil::Draw()
         ImGui::Text("%s", m_actor->ar_design_name.c_str());
         ImGui::Separator();
 
-        // Truck file format line
-        ImGui::TextWrapped("Truck file format line for flares2:");
-        ImGui::TextWrapped("NOTE: This omits the material name, don't forget it!");
-        ImGui::TextWrapped(";RefNode, X, Y, OffsetX, OffsetY, OffsetZ, Type, ControlNumber, BlinkDelay, size");
-        
-        // If a flare is selected, show its current values in truck file format
-        if (m_selected_flare < m_actor->ar_flares.size())
-        {
-            const flare_t& flare = m_actor->ar_flares[m_selected_flare];
-            std::string csv = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {}, {:.3f}",
-                flare.noderef,
-                flare.nodex,
-                flare.nodey,
-                flare.offsetx,
-                flare.offsety,
-                flare.offsetz,
-                (char)flare.fl_type,
-                flare.controlnumber,
-                (int)(flare.blinkdelay * 1000), // Convert to milliseconds
-                flare.size);
-
-            // Display in a selectable text box
-            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
-            ImGui::InputText("##truckline", const_cast<char*>(csv.c_str()), csv.length(), ImGuiInputTextFlags_ReadOnly);
-            ImGui::PopStyleColor();
-        }
-
-        ImGui::Separator();
-
         // Flare selection
         ImGui::Text(_LC("FlareUtil", "Flares: %d"), m_actor->ar_flares.size());
         
@@ -185,7 +156,33 @@ void FlareUtil::Draw()
             flare_t& flare = m_actor->ar_flares[m_selected_flare];
             ImGui::BeginGroup();
 
+            // Truck file format line
+
+            ImGui::TextWrapped("flares2 Truck file format line:");
+            ImGui::TextWrapped("NOTE: This currently omits the material name, don't forget it!");
+            ImGui::TextWrapped(";RefNode, X, Y, OffsetX, OffsetY, OffsetZ, Type, ControlNumber, BlinkDelay, size, ...");
+
+            std::string csv = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {}, {:.3f}",
+                flare.noderef,
+                flare.nodex,
+                flare.nodey,
+                flare.offsetx,
+                flare.offsety,
+                flare.offsetz,
+                (char)flare.fl_type,
+                flare.controlnumber,
+                (int)(flare.blinkdelay * 1000), // Convert to milliseconds
+                flare.size);
+
+            // Display in a selectable text box
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+            ImGui::InputText("##truckline", const_cast<char*>(csv.c_str()), csv.length(), ImGuiInputTextFlags_ReadOnly);
+            ImGui::PopStyleColor();
+
+            ImGui::Separator();
+
             // Display type and reference nodes
+
             ImGui::Text(_LC("FlareUtil", "Type: %c (%s)"), (char)flare.fl_type, GetFlareTypeDesc(flare.fl_type));
             
             // Node editors

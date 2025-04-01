@@ -215,8 +215,8 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
 
     // Truck file format line for easy copy-paste
     {
-        ImGui::TextWrapped("Truck file format line:");
-        ImGui::TextWrapped("NOTE: This only includes the first 12 values, don't forget the rest!");
+        ImGui::TextWrapped("videocamera Truck file format line:");
+        ImGui::TextWrapped("NOTE: This currently only includes the first 12 values, don't forget the rest!");
         ImGui::TextWrapped(";nref, nx, ny, ncam, nlookat, offx, offy, offz, rotx, roty, rotz, fov ...");
         
         // Get Euler angles
@@ -233,6 +233,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         }
 
         // For tracking mirrors, alt_pos should be -1 in truck file even though internally it's set to center node
+        // This works for the Thomas HDX, may not be OK for other vehicles
         int alt_pos_value = (is_tracking_mirror || vcam->vcam_node_alt_pos == NODENUM_INVALID) ? -1 : vcam->vcam_node_alt_pos;
 
         // Format truck file line
