@@ -85,12 +85,7 @@ private:
     bool hide_other_elements = false;
     std::vector<bool> show_locator;
 
-    // Remove old combo selection variables:
-    // std::string m_combo_items;
-    // int m_combo_props_start = -1;
-    // int m_combo_selection = 0;
-
-    // Add tab-based selection variables:
+    // Selection variables
     int m_selected_tab = 0;        // 0 = Flexbodies, 1 = Props 
     int m_selected_flexbody = -1;  // Index in flexbodies vector
     int m_selected_prop = -1;      // Index in props vector
@@ -99,8 +94,8 @@ private:
     bool m_is_visible = false;
     bool m_is_hovered = false;
 
-    // For prop rotation editing
-    Ogre::Vector3 m_raw_angles = Ogre::Vector3::ZERO;  // Stores raw Euler angles read from truck file
+    // For prop rotation editing, stores raw Euler angles read from truck file
+    Ogre::Vector3 m_raw_angles = Ogre::Vector3::ZERO;
 };
 
 } // namespace GUI

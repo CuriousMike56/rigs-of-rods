@@ -42,7 +42,7 @@ using namespace GUI;
 void FlexbodyDebug::Draw()
 {
     ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(1500, 1000), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(900, 600), ImGuiCond_FirstUseEver);
     ImGuiWindowFlags win_flags = ImGuiWindowFlags_NoCollapse;
     bool keep_open = true;
     ImGui::Begin(_LC("FlexbodyDebug", "Flexbody/Prop debug"), &keep_open, win_flags);

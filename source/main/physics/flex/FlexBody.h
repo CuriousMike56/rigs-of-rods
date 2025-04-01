@@ -1,8 +1,9 @@
 /*
-    This source file is part of Rigs of Rods
+    This source file is part of Rigs of Rods (CM fork)
     Copyright 2005-2012 Pierre-Michel Ricordel
     Copyright 2007-2012 Thomas Fischer
     Copyright 2013-2020 Petr Ohlidal
+    Copyright 2025 CuriousMike ft. GitHub Copilot
 
     For more information, see http://www.rigsofrods.org/
 
