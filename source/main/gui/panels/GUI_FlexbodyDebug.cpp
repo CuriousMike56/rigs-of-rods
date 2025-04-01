@@ -155,10 +155,26 @@ void FlexbodyDebug::Draw()
                     m_selected_prop = i;
                     m_selected_flexbody = -1;
                     m_values_initialized = false;
+
+                    // Store initial values when selecting
+                    size_t idx = actor->GetGfxActor()->GetFlexbodies().size() + i;
+                    if (idx >= m_element_transforms.size())
+                    {
+                        m_element_transforms.resize(idx + 1);
+                    }
+                    m_element_transforms[idx].offset = p.pp_offset;
+                    m_element_transforms[idx].rotation = p.pp_rot;
+                    m_element_transforms[idx].initialized = true;
+
+                    LOG(fmt::format("[RoR|DBG] Prop {} - Storing initial offset ({:.3f}, {:.3f}, {:.3f})",
+                        i, p.pp_offset.x, p.pp_offset.y, p.pp_offset.z));
+                    LOG(fmt::format("[RoR|DBG] Prop {} - Storing initial rotation from pp_rota: P={}, Y={}, R={}",
+                        i, p.pp_rota.x, p.pp_rota.y, p.pp_rota.z));
+
+                    // Store current values for editing
                     m_edit_offset = p.pp_offset;
-                    m_raw_angles.x = p.pp_rota.x;
-                    m_raw_angles.y = p.pp_rota.y;  
-                    m_raw_angles.z = p.pp_rota.z;
+                    m_raw_angles = p.pp_rota;
+                    
                     this->UpdateVisibility();
                 }
             }
@@ -527,17 +543,11 @@ void FlexbodyDebug::AnalyzeFlexbodies()
     if (!actor)
         return;
 
-    // Initialize if there are any flexbodies
+    m_element_transforms.clear();
+    
+    // Store initial transform for ALL flexbodies
     if (actor->GetGfxActor()->GetFlexbodies().size() > 0)
     {
-        m_selected_flexbody = 0;
-        FlexBody* flexbody = actor->GetGfxActor()->GetFlexbodies()[0];
-        show_locator.resize(flexbody->getVertexCount(), false);
-        m_edit_offset = flexbody->GetInitialOffset();
-        m_edit_rotation = flexbody->GetInitialRotation();
-
-        // Store initial transform for ALL flexbodies
-        m_element_transforms.clear();
         m_element_transforms.resize(actor->GetGfxActor()->GetFlexbodies().size());
         for (size_t i = 0; i < actor->GetGfxActor()->GetFlexbodies().size(); i++)
         {
@@ -546,24 +556,32 @@ void FlexbodyDebug::AnalyzeFlexbodies()
             m_element_transforms[i].rotation = fb->GetInitialRotation();
             m_element_transforms[i].initialized = true;
         }
+
+        m_selected_flexbody = 0;
+        FlexBody* flexbody = actor->GetGfxActor()->GetFlexbodies()[0];
+        show_locator.resize(flexbody->getVertexCount(), false);
+        m_edit_offset = flexbody->GetInitialOffset();
+        m_edit_rotation = flexbody->GetInitialRotation();
     }
-    // Otherwise check for props
+    // Store initial transform for ALL props 
     else if (actor->GetGfxActor()->getProps().size() > 0)
     {
+        size_t base_index = m_element_transforms.size();
+        m_element_transforms.resize(base_index + actor->GetGfxActor()->getProps().size());
+        
+        for (size_t i = 0; i < actor->GetGfxActor()->getProps().size(); i++)
+        {
+            const Prop& p = actor->GetGfxActor()->getProps()[i];
+            m_element_transforms[base_index + i].offset = p.pp_offset;
+            m_element_transforms[base_index + i].rotation = p.pp_rot;
+            m_element_transforms[base_index + i].initialized = true;
+        }
+
         m_selected_tab = 1;
         m_selected_prop = 0;
         Prop& prop = actor->GetGfxActor()->getProps()[0];
         m_edit_offset = prop.pp_offset;
         m_raw_angles = prop.pp_rota;
-
-        // Store initial values for ALL props
-        m_prop_initial_offsets.clear();
-        m_prop_initial_rotations.clear();
-        for (const Prop& p : actor->GetGfxActor()->getProps())
-        {
-            m_prop_initial_offsets.push_back(p.pp_offset);
-            m_prop_initial_rotations.push_back(p.pp_rota);
-        }
     }
 
     m_offset_rot_changed = false;
@@ -1116,28 +1134,29 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     // Reset position button
     if (ImGui::Button("Reset##pos"))
     {
-        // Get prop index in stored vector
-        int propIndex = m_selected_prop;
-        // Check bounds to avoid crash
-        if (propIndex >= 0 && propIndex < (int)m_prop_initial_offsets.size())
+        size_t prop_idx = m_selected_prop;
+        size_t flexbody_count = App::GetGameContext()->GetPlayerActor()->GetGfxActor()->GetFlexbodies().size();
+        size_t transform_idx = flexbody_count + prop_idx;
+        
+        if (transform_idx < m_element_transforms.size() && m_element_transforms[transform_idx].initialized)
         {
-            m_edit_offset = m_prop_initial_offsets[propIndex];
-            prop->pp_offset = m_edit_offset;
-            
+            // Use stored initial position
+            prop->pp_offset = m_element_transforms[transform_idx].offset;
+
             // Update prop position
             if (prop->pp_scene_node)
             {
-                prop->pp_scene_node->setPosition(m_edit_offset);
+                prop->pp_scene_node->setPosition(prop->pp_offset);
             }
             if (prop->pp_wheel_scene_node)
             {
-                prop->pp_wheel_scene_node->setPosition(m_edit_offset);
+                prop->pp_wheel_scene_node->setPosition(prop->pp_offset);
             }
 
             // Update local values
-            pos[0] = m_edit_offset.x;
-            pos[1] = m_edit_offset.y;
-            pos[2] = m_edit_offset.z;
+            pos[0] = prop->pp_offset.x;
+            pos[1] = prop->pp_offset.y;
+            pos[2] = prop->pp_offset.z;
 
             m_offset_rot_changed = true;
             changed = true;
@@ -1154,21 +1173,20 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     // Reset rotation button
     if (ImGui::Button("Reset##rot"))
     {
-        // Get prop index in stored vector
-        int propIndex = m_selected_prop;
-        // Check bounds to avoid crash
-        if (propIndex >= 0 && propIndex < (int)m_prop_initial_rotations.size())
+        size_t prop_idx = m_selected_prop;
+        size_t flexbody_count = App::GetGameContext()->GetPlayerActor()->GetGfxActor()->GetFlexbodies().size();
+        size_t transform_idx = flexbody_count + prop_idx;
+        
+        if (transform_idx < m_element_transforms.size() && m_element_transforms[transform_idx].initialized)
         {
-            // Restore initial rotation angles and update local values
-            prop->pp_rota = m_prop_initial_rotations[propIndex];
-            rot[0] = prop->pp_rota.x;
-            rot[1] = prop->pp_rota.y;
-            rot[2] = prop->pp_rota.z;
-
-            // Build quaternion in same order as ActorSpawner (Z->Y->X)
-            prop->pp_rot = Ogre::Quaternion(Ogre::Degree(rot[2]), Ogre::Vector3::UNIT_Z) *  // Roll first!
-                          Ogre::Quaternion(Ogre::Degree(rot[1]), Ogre::Vector3::UNIT_Y) *   // Then yaw
-                          Ogre::Quaternion(Ogre::Degree(rot[0]), Ogre::Vector3::UNIT_X);    // Then pitch
+            // Use stored initial rotation from selection time
+            prop->pp_rot = m_element_transforms[transform_idx].rotation;
+            
+            // Use initial raw angles directly instead of converting from quaternion
+            rot[0] = m_raw_angles.x;
+            rot[1] = m_raw_angles.y;
+            rot[2] = m_raw_angles.z;
+            prop->pp_rota = m_raw_angles;
 
             // Update prop rotation
             if (prop->pp_scene_node)
