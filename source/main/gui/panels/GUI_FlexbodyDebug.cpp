@@ -1037,45 +1037,15 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
     pos_changed |= ImGui::SliderFloat("Y offset", &pos[1], -10.0f, 10.0f, "%.3f");
     pos_changed |= ImGui::SliderFloat("Z offset", &pos[2], -10.0f, 10.0f, "%.3f");
 
-    // Rotation sliders
-    ImGui::Text("Rotation (degrees):");
-    bool rot_changed = false;
-    rot_changed |= ImGui::SliderFloat("Pitch (X)", &rot[0], -180.0f, 180.0f, "%.1f");
-    rot_changed |= ImGui::SliderFloat("Yaw (Y)", &rot[1], -180.0f, 180.0f, "%.1f");  
-    rot_changed |= ImGui::SliderFloat("Roll (Z)", &rot[2], -180.0f, 180.0f, "%.1f");
-
-    if (pos_changed || rot_changed)
-    {
-        // Update position
-        Ogre::Vector3 new_offset(pos[0], pos[1], pos[2]);
-        flexbody->UpdateCurrentOffset(new_offset);
-
-        // Update rotation using Euler angles in X->Y->Z order
-        Ogre::Quaternion new_rot = 
-            Ogre::Quaternion(Ogre::Degree(rot[0]), Ogre::Vector3::UNIT_X) * 
-            Ogre::Quaternion(Ogre::Degree(rot[1]), Ogre::Vector3::UNIT_Y) *
-            Ogre::Quaternion(Ogre::Degree(rot[2]), Ogre::Vector3::UNIT_Z);
-        flexbody->UpdateCurrentRotation(new_rot);
-
-        // Update flexbody
-        flexbody->UpdateFlexbodyPosition();
-
-        changed = true;
-    }
-
-    // Reset button functionality
-    if (ImGui::Button("Reset position & rotation"))
+    // Reset position button
+    if (ImGui::Button("Reset##pos"))
     {
         if (m_selected_flexbody >= 0 && m_selected_flexbody < (int)m_element_transforms.size() 
             && m_element_transforms[m_selected_flexbody].initialized)
         {
-            // Restore initial values
+            // Restore initial position
             Ogre::Vector3 initial_offset = m_element_transforms[m_selected_flexbody].offset;
-            Ogre::Quaternion initial_rotation = m_element_transforms[m_selected_flexbody].rotation;
-
-            // Update the flexbody
             flexbody->UpdateCurrentOffset(initial_offset);
-            flexbody->UpdateCurrentRotation(initial_rotation);
             flexbody->UpdateFlexbodyPosition();
 
             // Update UI values
@@ -1083,7 +1053,30 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
             pos[1] = initial_offset.y;
             pos[2] = initial_offset.z;
 
-            // Extract Euler angles
+            m_offset_rot_changed = true;
+            changed = true;
+        }
+    }
+
+    // Rotation sliders
+    ImGui::Text("Rotation (degrees):");
+    bool rot_changed = false;
+    rot_changed |= ImGui::SliderFloat("Pitch (X)", &rot[0], -180.0f, 180.0f, "%.1f");
+    rot_changed |= ImGui::SliderFloat("Yaw (Y)", &rot[1], -180.0f, 180.0f, "%.1f");  
+    rot_changed |= ImGui::SliderFloat("Roll (Z)", &rot[2], -180.0f, 180.0f, "%.1f");
+
+    // Reset rotation button
+    if (ImGui::Button("Reset##rot"))
+    {
+        if (m_selected_flexbody >= 0 && m_selected_flexbody < (int)m_element_transforms.size() 
+            && m_element_transforms[m_selected_flexbody].initialized)
+        {
+            // Restore initial rotation
+            Ogre::Quaternion initial_rotation = m_element_transforms[m_selected_flexbody].rotation;
+            flexbody->UpdateCurrentRotation(initial_rotation);
+            flexbody->UpdateFlexbodyPosition();
+
+            // Extract Euler angles for UI
             Ogre::Matrix3 rot_matrix;
             initial_rotation.ToRotationMatrix(rot_matrix);
             Ogre::Radian pitch, yaw, roll;
@@ -1095,6 +1088,24 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
             m_offset_rot_changed = true;
             changed = true;
         }
+    }
+
+    // Only update if values changed
+    if (pos_changed || rot_changed)
+    {
+        // Update position
+        flexbody->UpdateCurrentOffset(Ogre::Vector3(pos[0], pos[1], pos[2]));
+
+        // Update rotation using Euler angles in X->Y->Z order
+        flexbody->UpdateCurrentRotation(
+            Ogre::Quaternion(Ogre::Degree(rot[0]), Ogre::Vector3::UNIT_X) * 
+            Ogre::Quaternion(Ogre::Degree(rot[1]), Ogre::Vector3::UNIT_Y) *
+            Ogre::Quaternion(Ogre::Degree(rot[2]), Ogre::Vector3::UNIT_Z));
+
+        // Update flexbody
+        flexbody->UpdateFlexbodyPosition();
+
+        changed = true;
     }
 
     return changed;
