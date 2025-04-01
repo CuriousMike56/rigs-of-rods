@@ -1224,10 +1224,10 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
         prop->pp_rota.y = rot[1]; 
         prop->pp_rota.z = rot[2];
 
-        // Create quaternion in same order as ActorSpawner (Z->Y->X)
-        prop->pp_rot = Ogre::Quaternion(Ogre::Degree(rot[2]), Ogre::Vector3::UNIT_Z) *  // Roll first!
-                       Ogre::Quaternion(Ogre::Degree(rot[1]), Ogre::Vector3::UNIT_Y) *   // Then yaw
-                       Ogre::Quaternion(Ogre::Degree(rot[0]), Ogre::Vector3::UNIT_X);    // Then pitch
+        // Create quaternion
+        prop->pp_rot = Ogre::Quaternion(Ogre::Degree(rot[0]), Ogre::Vector3::UNIT_X) *
+                       Ogre::Quaternion(Ogre::Degree(rot[1]), Ogre::Vector3::UNIT_Y) *
+                       Ogre::Quaternion(Ogre::Degree(rot[2]), Ogre::Vector3::UNIT_Z);
 
         // Update visual state immediately
         if (prop->pp_scene_node)
