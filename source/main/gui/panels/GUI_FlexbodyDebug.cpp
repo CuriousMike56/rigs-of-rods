@@ -45,7 +45,7 @@ void FlexbodyDebug::Draw()
     ImGui::SetNextWindowSize(ImVec2(900, 600), ImGuiCond_FirstUseEver);
     ImGuiWindowFlags win_flags = ImGuiWindowFlags_NoCollapse;
     bool keep_open = true;
-    ImGui::Begin(_LC("FlexbodyDebug", "Flexbody/Prop debug"), &keep_open, win_flags);
+    ImGui::Begin(_LC("FlexbodyDebug", "Prop/Flexbody debug"), &keep_open, win_flags);
 
     ActorPtr actor = App::GetGameContext()->GetPlayerActor();
     if (!actor)
@@ -69,46 +69,6 @@ void FlexbodyDebug::Draw()
 
     // Left column: List of meshes
     ImGui::BeginTabBar("Selection");
-    if (ImGui::BeginTabItem("Flexbodies"))
-    {
-        m_selected_tab = 0;
-        
-        // List flexbodies in child window with fixed height
-        ImGui::BeginChild("flexbody_list", ImVec2(-1, -1), true);
-        for (size_t i = 0; i < actor->GetGfxActor()->GetFlexbodies().size(); i++)
-        {
-            FlexBody* fb = actor->GetGfxActor()->GetFlexbodies()[i];
-            std::string label;
-            if (fb->getPlaceholderType() == FlexBody::PlaceholderType::NOT_A_PLACEHOLDER)
-            {
-                label = fmt::format("[{}] {} ({} verts -> {} nodes)",
-                    i, fb->getOrigMeshName(), fb->getVertexCount(), fb->getForsetNodes().size());
-            }
-            else
-            {
-                label = fmt::format("[{}] {} ({})",
-                    i, fb->getOrigMeshName(), FlexBody::PlaceholderTypeToString(fb->getPlaceholderType()));
-            }
-
-            if (ImGui::Selectable(label.c_str(), m_selected_flexbody == i))
-            {
-                if (m_selected_flexbody != i)
-                {
-                    m_selected_flexbody = i;
-                    m_selected_prop = -1;
-                    show_locator.resize(0);
-                    show_locator.resize(fb->getVertexCount(), false);
-                    m_values_initialized = false;
-                    m_edit_offset = fb->GetInitialOffset();
-                    m_edit_rotation = fb->GetInitialRotation();
-                    this->UpdateVisibility();
-                }
-            }
-        }
-        ImGui::EndChild();
-        ImGui::EndTabItem();
-    }
-
     if (ImGui::BeginTabItem("Props"))
     {
         m_selected_tab = 1;
@@ -175,6 +135,46 @@ void FlexbodyDebug::Draw()
                     m_edit_offset = p.pp_offset;
                     m_raw_angles = p.pp_rota;
                     
+                    this->UpdateVisibility();
+                }
+            }
+        }
+        ImGui::EndChild();
+        ImGui::EndTabItem();
+    }
+
+    if (ImGui::BeginTabItem("Flexbodies"))
+    {
+        m_selected_tab = 0;
+        
+        // List flexbodies in child window with fixed height
+        ImGui::BeginChild("flexbody_list", ImVec2(-1, -1), true);
+        for (size_t i = 0; i < actor->GetGfxActor()->GetFlexbodies().size(); i++)
+        {
+            FlexBody* fb = actor->GetGfxActor()->GetFlexbodies()[i];
+            std::string label;
+            if (fb->getPlaceholderType() == FlexBody::PlaceholderType::NOT_A_PLACEHOLDER)
+            {
+                label = fmt::format("[{}] {} ({} verts -> {} nodes)",
+                    i, fb->getOrigMeshName(), fb->getVertexCount(), fb->getForsetNodes().size());
+            }
+            else
+            {
+                label = fmt::format("[{}] {} ({})",
+                    i, fb->getOrigMeshName(), FlexBody::PlaceholderTypeToString(fb->getPlaceholderType()));
+            }
+
+            if (ImGui::Selectable(label.c_str(), m_selected_flexbody == i))
+            {
+                if (m_selected_flexbody != i)
+                {
+                    m_selected_flexbody = i;
+                    m_selected_prop = -1;
+                    show_locator.resize(0);
+                    show_locator.resize(fb->getVertexCount(), false);
+                    m_values_initialized = false;
+                    m_edit_offset = fb->GetInitialOffset();
+                    m_edit_rotation = fb->GetInitialRotation();
                     this->UpdateVisibility();
                 }
             }
@@ -329,7 +329,7 @@ void FlexbodyDebug::Draw()
 void FlexbodyDebug::AnalyzeFlexbodies()
 {
     // Clear selections
-    m_selected_tab = 0;
+    m_selected_tab = 1; // Start with props tab selected
     m_selected_flexbody = -1;
     m_selected_prop = -1;
     m_values_initialized = false;
@@ -342,26 +342,8 @@ void FlexbodyDebug::AnalyzeFlexbodies()
 
     m_element_transforms.clear();
     
-    // Store initial transform for ALL flexbodies
-    if (actor->GetGfxActor()->GetFlexbodies().size() > 0)
-    {
-        m_element_transforms.resize(actor->GetGfxActor()->GetFlexbodies().size());
-        for (size_t i = 0; i < actor->GetGfxActor()->GetFlexbodies().size(); i++)
-        {
-            FlexBody* fb = actor->GetGfxActor()->GetFlexbodies()[i];
-            m_element_transforms[i].offset = fb->GetInitialOffset();
-            m_element_transforms[i].rotation = fb->GetInitialRotation();
-            m_element_transforms[i].initialized = true;
-        }
-
-        m_selected_flexbody = 0;
-        FlexBody* flexbody = actor->GetGfxActor()->GetFlexbodies()[0];
-        show_locator.resize(flexbody->getVertexCount(), false);
-        m_edit_offset = flexbody->GetInitialOffset();
-        m_edit_rotation = flexbody->GetInitialRotation();
-    }
-    // Store initial transform for ALL props 
-    else if (actor->GetGfxActor()->getProps().size() > 0)
+    // Store initial transform for ALL props
+    if (actor->GetGfxActor()->getProps().size() > 0)
     {
         size_t base_index = m_element_transforms.size();
         m_element_transforms.resize(base_index + actor->GetGfxActor()->getProps().size());
@@ -379,6 +361,25 @@ void FlexbodyDebug::AnalyzeFlexbodies()
         Prop& prop = actor->GetGfxActor()->getProps()[0];
         m_edit_offset = prop.pp_offset;
         m_raw_angles = prop.pp_rota;
+    }
+    // Store initial transform for ALL flexbodies
+    else if (actor->GetGfxActor()->GetFlexbodies().size() > 0)
+    {
+        m_element_transforms.resize(actor->GetGfxActor()->GetFlexbodies().size());
+        for (size_t i = 0; i < actor->GetGfxActor()->GetFlexbodies().size(); i++)
+        {
+            FlexBody* fb = actor->GetGfxActor()->GetFlexbodies()[i];
+            m_element_transforms[i].offset = fb->GetInitialOffset();
+            m_element_transforms[i].rotation = fb->GetInitialRotation();
+            m_element_transforms[i].initialized = true;
+        }
+
+        m_selected_tab = 0;
+        m_selected_flexbody = 0;
+        FlexBody* flexbody = actor->GetGfxActor()->GetFlexbodies()[0];
+        show_locator.resize(flexbody->getVertexCount(), false);
+        m_edit_offset = flexbody->GetInitialOffset();
+        m_edit_rotation = flexbody->GetInitialRotation();
     }
 
     m_offset_rot_changed = false;
