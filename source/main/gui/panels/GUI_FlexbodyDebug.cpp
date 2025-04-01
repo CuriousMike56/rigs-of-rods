@@ -788,6 +788,9 @@ void FlexbodyDebug::DrawMeshInfo(Prop* prop)
     // NOTE: `prop->pp_beacon_scene_node` has only billboards attached, not meshes.
 }
 
+const float FINE_ADJUST_BUTTON_WIDTH = 30.0f;
+const float MARGIN = 8.0f;
+
 bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
 {
     bool changed = false;
@@ -827,12 +830,43 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
         m_values_initialized = true;
     }
 
-    // Position sliders
+    // Position sliders with fine adjustment
     ImGui::Text("Position offset:");
     bool pos_changed = false;
-    pos_changed |= ImGui::SliderFloat("X offset", &pos[0], -10.0f, 10.0f, "%.3f");
-    pos_changed |= ImGui::SliderFloat("Y offset", &pos[1], -10.0f, 10.0f, "%.3f");
-    pos_changed |= ImGui::SliderFloat("Z offset", &pos[2], -10.0f, 10.0f, "%.3f");
+
+    // Calculate layout - needs a bit more margin to prevent window overflow
+    float content_width = ImGui::GetContentRegionAvail().x;
+    float btn_spacing = ImGui::GetStyle().ItemSpacing.x;
+    float total_btn_width = (2 * FINE_ADJUST_BUTTON_WIDTH) + btn_spacing;
+    float slider_width = content_width - total_btn_width - MARGIN;
+    float arrow_x = content_width - total_btn_width + MARGIN;
+
+    // X position
+    ImGui::PushItemWidth(slider_width);
+    pos_changed |= ImGui::SliderFloat("##posX", &pos[0], -10.0f, 10.0f, "X: %.3f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine(arrow_x);
+    if (ImGui::Button("-##x", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[0] -= 0.001f; pos_changed = true; }
+    ImGui::SameLine();
+    if(ImGui::Button("+##x", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[0] += 0.001f; pos_changed = true; }
+
+    // Y position
+    ImGui::PushItemWidth(slider_width);
+    pos_changed |= ImGui::SliderFloat("##posY", &pos[1], -10.0f, 10.0f, "Y: %.3f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine(arrow_x);
+    if (ImGui::Button("-##y", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[1] -= 0.001f; pos_changed = true; }
+    ImGui::SameLine();
+    if(ImGui::Button("+##y", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[1] += 0.001f; pos_changed = true; }
+
+    // Z position
+    ImGui::PushItemWidth(slider_width);
+    pos_changed |= ImGui::SliderFloat("##posZ", &pos[2], -10.0f, 10.0f, "Z: %.3f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine(arrow_x);
+    if (ImGui::Button("-##z", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[2] -= 0.001f; pos_changed = true; }
+    ImGui::SameLine();
+    if(ImGui::Button("+##z", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[2] += 0.001f; pos_changed = true; }
 
     // Reset position button
     if (ImGui::Button("Reset##pos"))
@@ -855,12 +889,36 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
         }
     }
 
-    // Rotation sliders
+    // Rotation sliders with fine adjustment
     ImGui::Text("Rotation (degrees):");
     bool rot_changed = false;
-    rot_changed |= ImGui::SliderFloat("Pitch (X)", &rot[0], -180.0f, 180.0f, "%.1f");
-    rot_changed |= ImGui::SliderFloat("Yaw (Y)", &rot[1], -180.0f, 180.0f, "%.1f");  
-    rot_changed |= ImGui::SliderFloat("Roll (Z)", &rot[2], -180.0f, 180.0f, "%.1f");
+
+    // Pitch
+    ImGui::PushItemWidth(slider_width);
+    rot_changed |= ImGui::SliderFloat("##rotX", &rot[0], -180.0f, 180.0f, "Pitch (X): %.1f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine(arrow_x);
+    if (ImGui::Button("-##pitch", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[0] -= 0.1f; rot_changed = true; }
+    ImGui::SameLine();
+    if(ImGui::Button("+##pitch", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[0] += 0.1f; rot_changed = true; }
+
+    // Yaw
+    ImGui::PushItemWidth(slider_width);
+    rot_changed |= ImGui::SliderFloat("##rotY", &rot[1], -180.0f, 180.0f, "Yaw (Y): %.1f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine(arrow_x);
+    if (ImGui::Button("-##yaw", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[1] -= 0.1f; rot_changed = true; }
+    ImGui::SameLine();
+    if(ImGui::Button("+##yaw", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[1] += 0.1f; rot_changed = true; }
+
+    // Roll
+    ImGui::PushItemWidth(slider_width);
+    rot_changed |= ImGui::SliderFloat("##rotZ", &rot[2], -180.0f, 180.0f, "Roll (Z): %.1f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine(arrow_x);
+    if (ImGui::Button("-##roll", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[2] -= 0.1f; rot_changed = true; }
+    ImGui::SameLine();
+    if(ImGui::Button("+##roll", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[2] += 0.1f; rot_changed = true; }
 
     // Reset rotation button
     if (ImGui::Button("Reset##rot"))
@@ -932,12 +990,43 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
         m_values_initialized = true;
     }
 
-    // Position sliders
+    // Position sliders with fine adjustment
     ImGui::Text("Position offset:");
     bool pos_changed = false;
-    pos_changed |= ImGui::SliderFloat("X offset", &pos[0], -10.0f, 10.0f, "%.3f");
-    pos_changed |= ImGui::SliderFloat("Y offset", &pos[1], -10.0f, 10.0f, "%.3f");
-    pos_changed |= ImGui::SliderFloat("Z offset", &pos[2], -10.0f, 10.0f, "%.3f");
+
+    // Calculate layout - needs a bit more margin to prevent window overflow
+    float content_width = ImGui::GetContentRegionAvail().x;
+    float btn_spacing = ImGui::GetStyle().ItemSpacing.x;
+    float total_btn_width = (2 * FINE_ADJUST_BUTTON_WIDTH) + btn_spacing;
+    float slider_width = content_width - total_btn_width - MARGIN;
+    float arrow_x = content_width - total_btn_width + MARGIN;
+
+    // X position
+    ImGui::PushItemWidth(slider_width);
+    pos_changed |= ImGui::SliderFloat("##posX", &pos[0], -10.0f, 10.0f, "X: %.3f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine(arrow_x);
+    if (ImGui::Button("-##x", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[0] -= 0.001f; pos_changed = true; }
+    ImGui::SameLine();
+    if(ImGui::Button("+##x", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[0] += 0.001f; pos_changed = true; }
+
+    // Y position
+    ImGui::PushItemWidth(slider_width);
+    pos_changed |= ImGui::SliderFloat("##posY", &pos[1], -10.0f, 10.0f, "Y: %.3f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine(arrow_x);
+    if (ImGui::Button("-##y", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[1] -= 0.001f; pos_changed = true; }
+    ImGui::SameLine();
+    if(ImGui::Button("+##y", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[1] += 0.001f; pos_changed = true; }
+
+    // Z position
+    ImGui::PushItemWidth(slider_width);
+    pos_changed |= ImGui::SliderFloat("##posZ", &pos[2], -10.0f, 10.0f, "Z: %.3f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine(arrow_x);
+    if (ImGui::Button("-##z", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[2] -= 0.001f; pos_changed = true; }
+    ImGui::SameLine();
+    if(ImGui::Button("+##z", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[2] += 0.001f; pos_changed = true; }
 
     // Reset position button
     if (ImGui::Button("Reset##pos"))
@@ -971,14 +1060,38 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
         }
     }
 
-    // Rotation sliders
+    // Rotation sliders with fine adjustment
     ImGui::Text("Rotation (degrees):");
     bool rot_changed = false;
-    rot_changed |= ImGui::SliderFloat("Pitch (X)", &rot[0], -180.0f, 180.0f, "%.1f");
-    rot_changed |= ImGui::SliderFloat("Yaw (Y)", &rot[1], -180.0f, 180.0f, "%.1f");
-    rot_changed |= ImGui::SliderFloat("Roll (Z)", &rot[2], -180.0f, 180.0f, "%.1f");
 
-    // Reset rotation button
+    // Pitch
+    ImGui::PushItemWidth(slider_width);
+    rot_changed |= ImGui::SliderFloat("##rotX", &rot[0], -180.0f, 180.0f, "Pitch (X): %.1f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine(arrow_x);
+    if (ImGui::Button("-##pitch", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[0] -= 0.1f; rot_changed = true; }
+    ImGui::SameLine();
+    if(ImGui::Button("+##pitch", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[0] += 0.1f; rot_changed = true; }
+
+    // Yaw
+    ImGui::PushItemWidth(slider_width);
+    rot_changed |= ImGui::SliderFloat("##rotY", &rot[1], -180.0f, 180.0f, "Yaw (Y): %.1f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine(arrow_x);
+    if (ImGui::Button("-##yaw", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[1] -= 0.1f; rot_changed = true; }
+    ImGui::SameLine();
+    if(ImGui::Button("+##yaw", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[1] += 0.1f; rot_changed = true; }
+
+    // Roll
+    ImGui::PushItemWidth(slider_width);
+    rot_changed |= ImGui::SliderFloat("##rotZ", &rot[2], -180.0f, 180.0f, "Roll (Z): %.1f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine(arrow_x);
+    if (ImGui::Button("-##roll", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[2] -= 0.1f; rot_changed = true; }
+    ImGui::SameLine();
+    if(ImGui::Button("+##roll", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[2] += 0.1f; rot_changed = true; }
+
+    // Reset rotation button 
     if (ImGui::Button("Reset##rot"))
     {
         size_t prop_idx = m_selected_prop;
