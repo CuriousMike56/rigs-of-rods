@@ -276,11 +276,13 @@ void FlexbodyDebug::Draw()
             this->DrawMeshInfo(prop);
     }
 
-    if (ImGui::CollapsingHeader("Position & rotation")) 
+    // Display (ALPHA) as flexbody editing is not fully functional yet
+    if (ImGui::CollapsingHeader(flexbody ? "Position & rotation (ALPHA)" : "Position & rotation"))
     {
         bool values_changed = false;
         if (flexbody)
         {
+            ImGui::Text("EXPERIMENTAL: Editing flexbodies is not fully supported yet!");
             values_changed = this->DrawFlexbodyOffsetRotationEdit(flexbody);
             if (values_changed)
             {
