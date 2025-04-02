@@ -69,9 +69,22 @@ void FlexbodyDebug::Draw()
 
     // Left column: List of meshes
     ImGui::BeginTabBar("Selection");
+    bool tab_changed = false;
+    
     if (ImGui::BeginTabItem("Props"))
     {
-        m_selected_tab = 1;
+        if (m_selected_tab != 1)
+        {
+            m_selected_tab = 1;
+            m_selected_flexbody = -1;
+            if (actor->GetGfxActor()->getProps().size() > 0)
+            {
+                m_selected_prop = 0;
+                m_values_initialized = false;
+                this->UpdateVisibility();
+            }
+            tab_changed = true;
+        }
         
         // List props in child window with fixed height  
         ImGui::BeginChild("prop_list", ImVec2(-1, -1), true);
@@ -145,8 +158,20 @@ void FlexbodyDebug::Draw()
 
     if (ImGui::BeginTabItem("Flexbodies"))
     {
-        m_selected_tab = 0;
-        
+        if (m_selected_tab != 0) 
+        {
+            m_selected_tab = 0;
+            m_selected_prop = -1;
+            if (actor->GetGfxActor()->GetFlexbodies().size() > 0)
+            {
+                m_selected_flexbody = 0;
+                show_locator.resize(actor->GetGfxActor()->GetFlexbodies()[0]->getVertexCount(), false);
+                m_values_initialized = false;
+                this->UpdateVisibility();
+            }
+            tab_changed = true;
+        }
+
         // List flexbodies in child window with fixed height
         ImGui::BeginChild("flexbody_list", ImVec2(-1, -1), true);
         for (size_t i = 0; i < actor->GetGfxActor()->GetFlexbodies().size(); i++)
@@ -276,8 +301,16 @@ void FlexbodyDebug::Draw()
             this->DrawMeshInfo(prop);
     }
 
-    // Display (ALPHA) as flexbody editing is not fully functional yet
-    if (ImGui::CollapsingHeader(flexbody ? "Position & rotation (ALPHA)" : "Position & rotation"))
+    bool header_open;
+    ImGuiTreeNodeFlags header_flags = 0;
+    if (!flexbody)
+    {
+        // Open position editor for props
+        header_flags |= ImGuiTreeNodeFlags_DefaultOpen;
+    }
+    
+    // Display (ALPHA) as flexbody editing is not fully functional yet 
+    if (header_open = ImGui::CollapsingHeader(flexbody ? "Position & rotation (ALPHA)" : "Position & rotation", header_flags))
     {
         bool values_changed = false;
         if (flexbody)
@@ -299,16 +332,6 @@ void FlexbodyDebug::Draw()
     else
     {
         m_is_editing = false;
-    }
-
-    if (flexbody)
-    {
-        // Add ref node info
-        ImGui::Separator();
-        ImGui::TextDisabled("Reference nodes:"); 
-        ImGui::Text("Center: %d", flexbody->getRefNode());
-        ImGui::Text("X: %d", flexbody->getXNode());
-        ImGui::Text("Y: %d", flexbody->getYNode());
     }
 
     ImGui::Columns(1); // End columns
@@ -358,8 +381,10 @@ void FlexbodyDebug::AnalyzeFlexbodies()
             m_element_transforms[base_index + i].initialized = true;
         }
 
+        // Start with props tab and first prop selected
         m_selected_tab = 1;
         m_selected_prop = 0;
+        m_selected_flexbody = -1;
         Prop& prop = actor->GetGfxActor()->getProps()[0];
         m_edit_offset = prop.pp_offset;
         m_raw_angles = prop.pp_rota;
@@ -376,8 +401,10 @@ void FlexbodyDebug::AnalyzeFlexbodies()
             m_element_transforms[i].initialized = true;
         }
 
+        // Start with flexbodies tab and first flexbody selected
         m_selected_tab = 0;
         m_selected_flexbody = 0;
+        m_selected_prop = -1;
         FlexBody* flexbody = actor->GetGfxActor()->GetFlexbodies()[0];
         show_locator.resize(flexbody->getVertexCount(), false);
         m_edit_offset = flexbody->GetInitialOffset();
