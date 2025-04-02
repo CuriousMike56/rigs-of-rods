@@ -45,7 +45,7 @@ void FlexbodyDebug::Draw()
     ImGui::SetNextWindowSize(ImVec2(900, 600), ImGuiCond_FirstUseEver);
     ImGuiWindowFlags win_flags = ImGuiWindowFlags_NoCollapse;
     bool keep_open = true;
-    ImGui::Begin(_LC("FlexbodyDebug", "Prop/Flexbody debug"), &keep_open, win_flags);
+    ImGui::Begin(_LC("FlexbodyDebug", "Prop/Flexbody Utility (CM)"), &keep_open, win_flags);
 
     ActorPtr actor = App::GetGameContext()->GetPlayerActor();
     if (!actor)

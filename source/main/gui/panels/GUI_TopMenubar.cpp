@@ -730,19 +730,19 @@ void TopMenubar::Draw(float dt)
                     m_open_menu = TopMenu::TOPMENU_NONE;
                 }
 
-                if (ImGui::Button(_LC("TopMenubar", "FlexBody debug")))
+                if (ImGui::Button(_LC("TopMenubar", "Prop/FlexBody utility (CM)")))
                 {
                     App::GetGuiManager()->FlexbodyDebug.SetVisible(true);
                     m_open_menu = TopMenu::TOPMENU_NONE;
                 }
 
-                if (ImGui::Button(_LC("TopMenubar", "Flare utility")))
+                if (ImGui::Button(_LC("TopMenubar", "Flare utility (CM)")))
                 {
                     App::GetGuiManager()->FlareUtil.SetVisible(true);
                     m_open_menu = TopMenu::TOPMENU_NONE;
                 }
 
-                if (ImGui::Button(_LC("TopMenubar", "VideoCamera utility")))
+                if (ImGui::Button(_LC("TopMenubar", "VideoCamera utility (CM)")))
                 {
                     App::GetGuiManager()->VidcamUtil.SetVisible(true);
                     m_open_menu = TopMenu::TOPMENU_NONE;

@@ -90,7 +90,7 @@ void FlareUtil::Draw()
     ImGui::SetNextWindowSize(ImVec2(500.0f, 400.0f), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
 
-    if (ImGui::Begin(_LC("FlareUtil", "Flare Utility"), &m_is_visible))
+    if (ImGui::Begin(_LC("FlareUtil", "Flare Utility (CM)"), &m_is_visible))
     {
         if (!m_actor)
         {
