@@ -405,14 +405,24 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         ImGui::SameLine();
         if (ImGui::Button("-", ImVec2(btn_width,0))) 
         { 
-            offset[i] = std::round((offset[i] - 0.001f) * 1000.0f) / 1000.0f;
-            pos_changed = true; 
+            float step = 0.001f;
+            if (ImGui::GetIO().KeyCtrl)
+                step = 0.010f;
+            else if (ImGui::GetIO().KeyShift)
+                step = 0.100f;
+            offset[i] = std::round((offset[i] - step) * 1000.0f) / 1000.0f;
+            pos_changed = true;
         }
         ImGui::SameLine();
         if(ImGui::Button("+", ImVec2(btn_width,0))) 
         { 
-            offset[i] = std::round((offset[i] + 0.001f) * 1000.0f) / 1000.0f;
-            pos_changed = true; 
+            float step = 0.001f;
+            if (ImGui::GetIO().KeyCtrl)
+                step = 0.010f;
+            else if (ImGui::GetIO().KeyShift)
+                step = 0.100f;
+            offset[i] = std::round((offset[i] + step) * 1000.0f) / 1000.0f;
+            pos_changed = true;
         }
         ImGui::PopID();
     }
@@ -430,7 +440,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         vcams[m_selected_videocam].vcam_pos_offset = m_orig_state[m_selected_videocam].pos_offset;
     }
 
-    // Only show rotation controls for non-tracking cameras/mirrors
+// Only show rotation controls for non-tracking cameras/mirrors
     if (!is_tracking)
     {
         // Rotation editor with fine adjustment buttons
@@ -472,13 +482,23 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             ImGui::SameLine();
             if (ImGui::Button("-", ImVec2(btn_width,0))) 
             { 
-                rotation[i] = std::max(min_angle, rotation[i] - 0.1f);
+                float step = 0.1f;
+                if (ImGui::GetIO().KeyCtrl)
+                    step = 1.0f;
+                else if (ImGui::GetIO().KeyShift)
+                    step = 10.0f;
+                rotation[i] = std::max(min_angle, rotation[i] - step);
                 rot_changed = true;
             }
             ImGui::SameLine();
             if(ImGui::Button("+", ImVec2(btn_width,0))) 
             { 
-                rotation[i] = std::min(max_angle, rotation[i] + 0.1f);
+                float step = 0.1f;
+                if (ImGui::GetIO().KeyCtrl)
+                    step = 1.0f;
+                else if (ImGui::GetIO().KeyShift)
+                    step = 10.0f;
+                rotation[i] = std::min(max_angle, rotation[i] + step);
                 rot_changed = true;
             }
             ImGui::PopID();

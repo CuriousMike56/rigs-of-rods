@@ -256,9 +256,27 @@ void FlareUtil::Draw()
                     float btn_width = 25.0f;
                     float spacing = ImGui::GetStyle().ItemSpacing.x;
                     ImGui::SameLine();
-                    if (ImGui::Button("-##x", ImVec2(btn_width,0))) { pos_x -= 0.001f; pos_changed = true; }
+                    if (ImGui::Button("-##x", ImVec2(btn_width,0))) 
+                    { 
+                        float step = 0.001f;
+                        if (ImGui::GetIO().KeyCtrl)
+                            step = 0.010f;
+                        else if (ImGui::GetIO().KeyShift)
+                            step = 0.100f;
+                        pos_x -= step;
+                        pos_changed = true;
+                    }
                     ImGui::SameLine();
-                    if(ImGui::Button("+##x", ImVec2(btn_width,0))) { pos_x += 0.001f; pos_changed = true; }
+                    if(ImGui::Button("+##x", ImVec2(btn_width,0)))
+                    { 
+                        float step = 0.001f;
+                        if (ImGui::GetIO().KeyCtrl)
+                            step = 0.010f;
+                        else if (ImGui::GetIO().KeyShift)
+                            step = 0.100f;
+                        pos_x += step;
+                        pos_changed = true;
+                    }
                 }
                 if (pos_changed) { flare.offsetx = pos_x; }
                 ImGui::PopID();
@@ -274,9 +292,27 @@ void FlareUtil::Draw()
                     float btn_width = 25.0f;
                     float spacing = ImGui::GetStyle().ItemSpacing.x;
                     ImGui::SameLine();
-                    if (ImGui::Button("-##y", ImVec2(btn_width,0))) { pos_y -= 0.001f; pos_changed = true; }
+                    if (ImGui::Button("-##y", ImVec2(btn_width,0)))
+                    { 
+                        float step = 0.001f;
+                        if (ImGui::GetIO().KeyCtrl)
+                            step = 0.010f;
+                        else if (ImGui::GetIO().KeyShift)
+                            step = 0.100f;
+                        pos_y -= step;
+                        pos_changed = true;
+                    }
                     ImGui::SameLine();
-                    if(ImGui::Button("+##y", ImVec2(btn_width,0))) { pos_y += 0.001f; pos_changed = true; }
+                    if(ImGui::Button("+##y", ImVec2(btn_width,0)))
+                    { 
+                        float step = 0.001f;
+                        if (ImGui::GetIO().KeyCtrl)
+                            step = 0.010f;
+                        else if (ImGui::GetIO().KeyShift)
+                            step = 0.100f;
+                        pos_y += step;
+                        pos_changed = true;
+                    }
                 }
                 if (pos_changed) { flare.offsety = pos_y; }
                 ImGui::PopID();
@@ -292,9 +328,27 @@ void FlareUtil::Draw()
                     float btn_width = 25.0f;
                     float spacing = ImGui::GetStyle().ItemSpacing.x;
                     ImGui::SameLine();
-                    if (ImGui::Button("-##z", ImVec2(btn_width,0))) { pos_z -= 0.001f; pos_changed = true; }
+                    if (ImGui::Button("-##z", ImVec2(btn_width,0)))
+                    { 
+                        float step = 0.001f;
+                        if (ImGui::GetIO().KeyCtrl)
+                            step = 0.010f;
+                        else if (ImGui::GetIO().KeyShift)
+                            step = 0.100f;
+                        pos_z -= step;
+                        pos_changed = true;
+                    }
                     ImGui::SameLine();
-                    if(ImGui::Button("+##z", ImVec2(btn_width,0))) { pos_z += 0.001f; pos_changed = true; }
+                    if(ImGui::Button("+##z", ImVec2(btn_width,0)))
+                    { 
+                        float step = 0.001f;
+                        if (ImGui::GetIO().KeyCtrl)
+                            step = 0.010f;
+                        else if (ImGui::GetIO().KeyShift)
+                            step = 0.100f;
+                        pos_z += step;
+                        pos_changed = true;
+                    }
                 }
                 if (pos_changed) { flare.offsetz = pos_z; }
                 ImGui::PopID();
@@ -320,9 +374,27 @@ void FlareUtil::Draw()
                 float btn_width = 25.0f;
                 float spacing = ImGui::GetStyle().ItemSpacing.x;
                 ImGui::SameLine();
-                if (ImGui::Button("-##size", ImVec2(btn_width,0))) { size -= 0.001f; flare.size = size; }
+                if (ImGui::Button("-##size", ImVec2(btn_width,0))) 
+                { 
+                    float step = 0.001f;
+                    if (ImGui::GetIO().KeyCtrl)
+                        step = 0.010f;
+                    else if (ImGui::GetIO().KeyShift)
+                        step = 0.100f;
+                    size -= step;
+                    flare.size = size;
+                }
                 ImGui::SameLine();
-                if(ImGui::Button("+##size", ImVec2(btn_width,0))) { size += 0.001f; flare.size = size; }
+                if(ImGui::Button("+##size", ImVec2(btn_width,0)))
+                { 
+                    float step = 0.001f;
+                    if (ImGui::GetIO().KeyCtrl)
+                        step = 0.010f;
+                    else if (ImGui::GetIO().KeyShift)
+                        step = 0.100f;
+                    size += step;
+                    flare.size = size;
+                }
             }
             if (ImGui::Button(_LC("FlareUtil", "Reset##size")))
             {
