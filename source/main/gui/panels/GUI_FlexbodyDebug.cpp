@@ -62,10 +62,18 @@ void FlexbodyDebug::Draw()
         ImGui::End();
         return;
     }
+    
+    FlexBody* flexbody = nullptr;
+    Prop* prop = nullptr;
+    NodeNum_t node_ref = NODENUM_INVALID, node_x = NODENUM_INVALID, node_y = NODENUM_INVALID;
+    bool flexbody_locators_visible = false;
 
-    // Create two columns for side-by-side layout
-    ImGui::Columns(2, "flex_debug_columns", true);
-    ImGui::SetColumnWidth(0, 470);
+    // Create two columns only if something is selected
+    if (m_selected_flexbody != -1 || m_selected_prop != -1)
+    {
+        ImGui::Columns(2, "flex_debug_columns", true);
+        ImGui::SetColumnWidth(0, 470);
+    }
 
     // Left column: List of meshes
     ImGui::BeginTabBar("Selection");
@@ -77,7 +85,9 @@ void FlexbodyDebug::Draw()
         {
             m_selected_tab = 1;
             m_selected_flexbody = -1;
-            if (actor->GetGfxActor()->getProps().size() > 0)
+            m_selected_prop = -1;  // Reset prop selection first
+            size_t num_props = actor->GetGfxActor()->getProps().size();
+            if (num_props > 0)
             {
                 m_selected_prop = 0;
                 m_values_initialized = false;
@@ -85,70 +95,77 @@ void FlexbodyDebug::Draw()
             }
             tab_changed = true;
         }
-        
+
         // List props in child window with fixed height  
         ImGui::BeginChild("prop_list", ImVec2(-1, -1), true);
-        for (size_t i = 0; i < actor->GetGfxActor()->getProps().size(); i++)
+        if (actor->GetGfxActor()->getProps().size() == 0)
         {
-            Prop& p = actor->GetGfxActor()->getProps()[i];
-            std::string caption;
-            if (p.pp_beacon_type == 'L' || p.pp_beacon_type == 'R' || p.pp_beacon_type == 'w')
+            ImGui::TextWrapped("%s", _LC("FlexbodyDebug", "This vehicle has no props."));
+        }
+        else
+        {
+            for (size_t i = 0; i < actor->GetGfxActor()->getProps().size(); i++)
             {
-                caption = fmt::format("[{}] Aerial nav light '{}'", i, p.pp_beacon_type);
-            }
-            else if (p.pp_wheel_mesh_obj)
-            {
-                if (p.pp_mesh_obj->getLoadedMesh() && p.pp_wheel_mesh_obj->getLoadedMesh())
+                Prop& p = actor->GetGfxActor()->getProps()[i];
+                std::string caption;
+                if (p.pp_beacon_type == 'L' || p.pp_beacon_type == 'R' || p.pp_beacon_type == 'w')
                 {
-                    caption = fmt::format("[{}] Dashboard '{}' + dirwheel '{}'",
-                        i, p.pp_mesh_obj->getLoadedMesh()->getName(), p.pp_wheel_mesh_obj->getLoadedMesh()->getName());
+                    caption = fmt::format("[{}] Aerial nav light '{}'", i, p.pp_beacon_type);
                 }
-                else if (!p.pp_mesh_obj->getLoadedMesh() && p.pp_wheel_mesh_obj->getLoadedMesh())
+                else if (p.pp_wheel_mesh_obj)
                 {
-                    caption = fmt::format("[{}] Dirwheel '{}'", i, p.pp_wheel_mesh_obj->getLoadedMesh()->getName());
+                    if (p.pp_mesh_obj->getLoadedMesh() && p.pp_wheel_mesh_obj->getLoadedMesh())
+                    {
+                        caption = fmt::format("[{}] Dashboard '{}' + dirwheel '{}'",
+                            i, p.pp_mesh_obj->getLoadedMesh()->getName(), p.pp_wheel_mesh_obj->getLoadedMesh()->getName());
+                    }
+                    else if (!p.pp_mesh_obj->getLoadedMesh() && p.pp_wheel_mesh_obj->getLoadedMesh())
+                    {
+                        caption = fmt::format("[{}] Dirwheel '{}'", i, p.pp_wheel_mesh_obj->getLoadedMesh()->getName());
+                    }
+                    else
+                    {
+                        caption = fmt::format("[{}] Corrupted dashboard prop", i);
+                    }
+                }
+                else if (p.pp_mesh_obj && p.pp_mesh_obj->getLoadedMesh())
+                {
+                    caption = fmt::format("[{}] {}", i, p.pp_mesh_obj->getLoadedMesh()->getName());
                 }
                 else
                 {
-                    caption = fmt::format("[{}] Corrupted dashboard prop", i);
+                    caption = fmt::format("[{}] Corrupted prop", i);
                 }
-            }
-            else if (p.pp_mesh_obj && p.pp_mesh_obj->getLoadedMesh())
-            {
-                caption = fmt::format("[{}] {}", i, p.pp_mesh_obj->getLoadedMesh()->getName());
-            }
-            else
-            {
-                caption = fmt::format("[{}] Corrupted prop", i);
-            }
 
-            if (ImGui::Selectable(caption.c_str(), m_selected_prop == i))
-            {
-                if (m_selected_prop != i)
+                if (ImGui::Selectable(caption.c_str(), m_selected_prop == i))
                 {
-                    m_selected_prop = i;
-                    m_selected_flexbody = -1;
-                    m_values_initialized = false;
-
-                    // Store initial values when selecting
-                    size_t idx = actor->GetGfxActor()->GetFlexbodies().size() + i;
-                    if (idx >= m_element_transforms.size())
+                    if (m_selected_prop != i)
                     {
-                        m_element_transforms.resize(idx + 1);
+                        m_selected_prop = i;
+                        m_selected_flexbody = -1;
+                        m_values_initialized = false;
+
+                        // Store initial values when selecting
+                        size_t idx = actor->GetGfxActor()->GetFlexbodies().size() + i;
+                        if (idx >= m_element_transforms.size())
+                        {
+                            m_element_transforms.resize(idx + 1);
+                        }
+                        m_element_transforms[idx].offset = p.pp_offset;
+                        m_element_transforms[idx].rotation = p.pp_rot;
+                        m_element_transforms[idx].initialized = true;
+
+                        LOG(fmt::format("[RoR|DBG] Prop {} - Storing initial offset ({:.3f}, {:.3f}, {:.3f})",
+                            i, p.pp_offset.x, p.pp_offset.y, p.pp_offset.z));
+                        LOG(fmt::format("[RoR|DBG] Prop {} - Storing initial rotation from pp_rota: P={}, Y={}, R={}",
+                            i, p.pp_rota.x, p.pp_rota.y, p.pp_rota.z));
+
+                        // Store current values for editing
+                        m_edit_offset = p.pp_offset;
+                        m_raw_angles = p.pp_rota;
+                        
+                        this->UpdateVisibility();
                     }
-                    m_element_transforms[idx].offset = p.pp_offset;
-                    m_element_transforms[idx].rotation = p.pp_rot;
-                    m_element_transforms[idx].initialized = true;
-
-                    LOG(fmt::format("[RoR|DBG] Prop {} - Storing initial offset ({:.3f}, {:.3f}, {:.3f})",
-                        i, p.pp_offset.x, p.pp_offset.y, p.pp_offset.z));
-                    LOG(fmt::format("[RoR|DBG] Prop {} - Storing initial rotation from pp_rota: P={}, Y={}, R={}",
-                        i, p.pp_rota.x, p.pp_rota.y, p.pp_rota.z));
-
-                    // Store current values for editing
-                    m_edit_offset = p.pp_offset;
-                    m_raw_angles = p.pp_rota;
-                    
-                    this->UpdateVisibility();
                 }
             }
         }
@@ -162,7 +179,9 @@ void FlexbodyDebug::Draw()
         {
             m_selected_tab = 0;
             m_selected_prop = -1;
-            if (actor->GetGfxActor()->GetFlexbodies().size() > 0)
+            m_selected_flexbody = -1;
+            size_t num_flexbodies = actor->GetGfxActor()->GetFlexbodies().size();
+            if (num_flexbodies > 0)
             {
                 m_selected_flexbody = 0;
                 show_locator.resize(actor->GetGfxActor()->GetFlexbodies()[0]->getVertexCount(), false);
@@ -174,33 +193,40 @@ void FlexbodyDebug::Draw()
 
         // List flexbodies in child window with fixed height
         ImGui::BeginChild("flexbody_list", ImVec2(-1, -1), true);
-        for (size_t i = 0; i < actor->GetGfxActor()->GetFlexbodies().size(); i++)
+        if (actor->GetGfxActor()->GetFlexbodies().size() == 0)
         {
-            FlexBody* fb = actor->GetGfxActor()->GetFlexbodies()[i];
-            std::string label;
-            if (fb->getPlaceholderType() == FlexBody::PlaceholderType::NOT_A_PLACEHOLDER)
+            ImGui::TextWrapped("%s", _LC("FlexbodyDebug", "This vehicle has no flexbodies."));
+        }
+        else
+        {
+            for (size_t i = 0; i < actor->GetGfxActor()->GetFlexbodies().size(); i++)
             {
-                label = fmt::format("[{}] {} ({} verts -> {} nodes)",
-                    i, fb->getOrigMeshName(), fb->getVertexCount(), fb->getForsetNodes().size());
-            }
-            else
-            {
-                label = fmt::format("[{}] {} ({})",
-                    i, fb->getOrigMeshName(), FlexBody::PlaceholderTypeToString(fb->getPlaceholderType()));
-            }
-
-            if (ImGui::Selectable(label.c_str(), m_selected_flexbody == i))
-            {
-                if (m_selected_flexbody != i)
+                FlexBody* fb = actor->GetGfxActor()->GetFlexbodies()[i];
+                std::string label;
+                if (fb->getPlaceholderType() == FlexBody::PlaceholderType::NOT_A_PLACEHOLDER)
                 {
-                    m_selected_flexbody = i;
-                    m_selected_prop = -1;
-                    show_locator.resize(0);
-                    show_locator.resize(fb->getVertexCount(), false);
-                    m_values_initialized = false;
-                    m_edit_offset = fb->GetInitialOffset();
-                    m_edit_rotation = fb->GetInitialRotation();
-                    this->UpdateVisibility();
+                    label = fmt::format("[{}] {} ({} verts -> {} nodes)",
+                        i, fb->getOrigMeshName(), fb->getVertexCount(), fb->getForsetNodes().size());
+                }
+                else
+                {
+                    label = fmt::format("[{}] {} ({})",
+                        i, fb->getOrigMeshName(), FlexBody::PlaceholderTypeToString(fb->getPlaceholderType()));
+                }
+
+                if (ImGui::Selectable(label.c_str(), m_selected_flexbody == i))
+                {
+                    if (m_selected_flexbody != i)
+                    {
+                        m_selected_flexbody = i;
+                        m_selected_prop = -1;
+                        show_locator.resize(0);
+                        show_locator.resize(fb->getVertexCount(), false);
+                        m_values_initialized = false;
+                        m_edit_offset = fb->GetInitialOffset();
+                        m_edit_rotation = fb->GetInitialRotation();
+                        this->UpdateVisibility();
+                    }
                 }
             }
         }
@@ -209,132 +235,131 @@ void FlexbodyDebug::Draw()
     }
     ImGui::EndTabBar();
 
-    // Right column: Options and controls
-    ImGui::NextColumn();
-
-    // Continue with the rest of Draw()...
-    if (ImGui::Checkbox("Hide other (note: pauses reflections)", &this->hide_other_elements))
+    // Right column: Only draw if something is selected
+    if (m_selected_flexbody != -1 || m_selected_prop != -1)
     {
-        this->UpdateVisibility();
-    }
-    ImGui::Separator();
+        ImGui::NextColumn();
 
-    // Fetch the element (prop or flexbody)
-    FlexBody* flexbody = nullptr;
-    Prop* prop = nullptr;
-    Ogre::MaterialPtr mat; // Assume one submesh (=> subentity); can be NULL if the flexbody is a placeholder, see `FlexBodyPlaceholder_t`
-    NodeNum_t node_ref = NODENUM_INVALID, node_x = NODENUM_INVALID, node_y = NODENUM_INVALID;
-    std::string mesh_name;
-    if (actor->GetGfxActor()->getProps().size() > 0
-        && m_selected_prop >= 0)
-    {
-        prop = &actor->GetGfxActor()->getProps()[m_selected_prop];
-        node_ref = prop->pp_node_ref;
-        node_x = prop->pp_node_x;
-        node_y = prop->pp_node_y;
-        if (prop->pp_mesh_obj // Aerial beacons 'L/R/w' have no mesh
-            && prop->pp_mesh_obj->getLoadedMesh()) // Props are spawned even if meshes fail to load.
+        // Continue with the rest of Draw()...
+        if (ImGui::Checkbox("Hide other (note: pauses reflections)", &this->hide_other_elements))
         {
-            mat = prop->pp_mesh_obj->getEntity()->getSubEntity(0)->getMaterial();
-            mesh_name = prop->pp_mesh_obj->getEntity()->getMesh()->getName();
+            this->UpdateVisibility();
         }
-    }
-    else
-    {
-        flexbody = actor->GetGfxActor()->GetFlexbodies()[m_selected_flexbody];
-        if (flexbody->getPlaceholderType() == FlexBody::PlaceholderType::NOT_A_PLACEHOLDER)
-        {
-            mat = flexbody->getEntity()->getSubEntity(0)->getMaterial();
-        }
-        node_ref = flexbody->getRefNode();
-        node_x = flexbody->getXNode();
-        node_y = flexbody->getYNode();
-        mesh_name = flexbody->getOrigMeshName();
-    }
+        ImGui::Separator();
 
-    ImGui::Text("Mesh: '%s'", mesh_name.c_str());
-    if (mat)
-    {
-        ImGui::SameLine();
-        if (ImGui::Checkbox("Wireframe (per material)", &this->draw_mesh_wireframe))
+        // Fetch the element (prop or flexbody)
+        Ogre::MaterialPtr mat; // Assume one submesh (=> subentity); can be NULL if the flexbody is a placeholder, see `FlexBodyPlaceholder_t`
+        std::string mesh_name;
+        if (actor->GetGfxActor()->getProps().size() > 0
+            && m_selected_prop >= 0)
         {
-            // Assume one technique and one pass
-            if (mat->getTechniques().size() > 0 && mat->getTechniques()[0]->getPasses().size() > 0)
+            prop = &actor->GetGfxActor()->getProps()[m_selected_prop];
+            node_ref = prop->pp_node_ref;
+            node_x = prop->pp_node_x;
+            node_y = prop->pp_node_y;
+            if (prop->pp_mesh_obj // Aerial beacons 'L/R/w' have no mesh
+                && prop->pp_mesh_obj->getLoadedMesh()) // Props are spawned even if meshes fail to load.
             {
-                Ogre::PolygonMode mode = (this->draw_mesh_wireframe) ? Ogre::PM_WIREFRAME : Ogre::PM_SOLID;
-                mat->getTechniques()[0]->getPasses()[0]->setPolygonMode(mode);
+                mat = prop->pp_mesh_obj->getEntity()->getSubEntity(0)->getMaterial();
+                mesh_name = prop->pp_mesh_obj->getEntity()->getMesh()->getName();
             }
         }
-    }
-
-    ImGui::Text("Base nodes: Ref=%d, X=%d, Y=%d", (int)node_ref, (int)node_x, (int)node_y);
-    ImGui::SameLine();
-    ImGui::Checkbox("Show##base", &this->show_base_nodes);
-
-    bool flexbody_locators_visible = false;
-    if (flexbody)
-    {
-        ImGui::Text("Forset nodes: (total %d)", (int)flexbody->getForsetNodes().size());
-        ImGui::SameLine();
-        ImGui::Checkbox("Show all##forset", &this->show_forset_nodes);
-
-        ImGui::Text("Vertices: (total %d)", (int)flexbody->getVertexCount());
-        ImGui::SameLine();
-        ImGui::Checkbox("Show all (pick with mouse)##verts", &this->show_vertices);
-
-        if (ImGui::CollapsingHeader("Vertex locators table"))
+        else if (actor->GetGfxActor()->GetFlexbodies().size() > 0 && m_selected_flexbody >= 0)
         {
-            this->DrawLocatorsTable(flexbody, /*out:*/flexbody_locators_visible);
+            flexbody = actor->GetGfxActor()->GetFlexbodies()[m_selected_flexbody];
+            if (flexbody->getPlaceholderType() == FlexBody::PlaceholderType::NOT_A_PLACEHOLDER)
+            {
+                mat = flexbody->getEntity()->getSubEntity(0)->getMaterial();
+            }
+            node_ref = flexbody->getRefNode();
+            node_x = flexbody->getXNode();
+            node_y = flexbody->getYNode();
+            mesh_name = flexbody->getOrigMeshName();
         }
 
-        if (ImGui::CollapsingHeader("Vertex locators memory (experimental!)"))
+        ImGui::Text("Mesh: '%s'", mesh_name.c_str());
+        if (mat)
         {
-            this->DrawMemoryOrderGraph(flexbody);
+            ImGui::SameLine();
+            if (ImGui::Checkbox("Wireframe (per material)", &this->draw_mesh_wireframe))
+            {
+                // Assume one technique and one pass
+                if (mat->getTechniques().size() > 0 && mat->getTechniques()[0]->getPasses().size() > 0)
+                {
+                    Ogre::PolygonMode mode = (this->draw_mesh_wireframe) ? Ogre::PM_WIREFRAME : Ogre::PM_SOLID;
+                    mat->getTechniques()[0]->getPasses()[0]->setPolygonMode(mode);
+                }
+            }
         }
-    }
 
-    if (ImGui::CollapsingHeader("Mesh info"))
-    {
+        ImGui::Text("Base nodes: Ref=%d, X=%d, Y=%d", (int)node_ref, (int)node_x, (int)node_y);
+        ImGui::SameLine();
+        ImGui::Checkbox("Show##base", &this->show_base_nodes);
+
         if (flexbody)
-            this->DrawMeshInfo(flexbody);
+        {
+            ImGui::Text("Forset nodes: (total %d)", (int)flexbody->getForsetNodes().size());
+            ImGui::SameLine();
+            ImGui::Checkbox("Show all##forset", &this->show_forset_nodes);
+
+            ImGui::Text("Vertices: (total %d)", (int)flexbody->getVertexCount());
+            ImGui::SameLine();
+            ImGui::Checkbox("Show all (pick with mouse)##verts", &this->show_vertices);
+
+            if (ImGui::CollapsingHeader("Vertex locators table"))
+            {
+                this->DrawLocatorsTable(flexbody, /*out:*/flexbody_locators_visible);
+            }
+
+            if (ImGui::CollapsingHeader("Vertex locators memory (experimental!)"))
+            {
+                this->DrawMemoryOrderGraph(flexbody);
+            }
+        }
+
+        if (ImGui::CollapsingHeader("Mesh info"))
+        {
+            if (flexbody)
+                this->DrawMeshInfo(flexbody);
+            else
+                this->DrawMeshInfo(prop);
+        }
+
+        bool header_open;
+        ImGuiTreeNodeFlags header_flags = 0;
+        if (!flexbody)
+        {
+            // Open position editor for props
+            header_flags |= ImGuiTreeNodeFlags_DefaultOpen;
+        }
+        
+        // Display (ALPHA) as flexbody editing is not fully functional yet 
+        if (header_open = ImGui::CollapsingHeader(flexbody ? "Position & rotation (ALPHA)" : "Position & rotation", header_flags))
+        {
+            bool values_changed = false;
+            if (flexbody)
+            {
+                ImGui::Text("EXPERIMENTAL: Editing flexbodies is not fully supported yet!");
+                values_changed = this->DrawFlexbodyOffsetRotationEdit(flexbody);
+                if (values_changed)
+                {
+                    flexbody->computeFlexbody();
+                    flexbody->updateFlexbodyVertexBuffers();
+                }
+            }
+            else if (prop)
+            {
+                values_changed = this->DrawPropOffsetRotationEdit(prop);
+            }
+            m_offset_rot_changed = m_offset_rot_changed || values_changed;
+        }
         else
-            this->DrawMeshInfo(prop);
-    }
-
-    bool header_open;
-    ImGuiTreeNodeFlags header_flags = 0;
-    if (!flexbody)
-    {
-        // Open position editor for props
-        header_flags |= ImGuiTreeNodeFlags_DefaultOpen;
-    }
-    
-    // Display (ALPHA) as flexbody editing is not fully functional yet 
-    if (header_open = ImGui::CollapsingHeader(flexbody ? "Position & rotation (ALPHA)" : "Position & rotation", header_flags))
-    {
-        bool values_changed = false;
-        if (flexbody)
         {
-            ImGui::Text("EXPERIMENTAL: Editing flexbodies is not fully supported yet!");
-            values_changed = this->DrawFlexbodyOffsetRotationEdit(flexbody);
-            if (values_changed)
-            {
-                flexbody->computeFlexbody();
-                flexbody->updateFlexbodyVertexBuffers();
-            }
+            m_is_editing = false;
         }
-        else if (prop)
-        {
-            values_changed = this->DrawPropOffsetRotationEdit(prop);
-        }
-        m_offset_rot_changed = m_offset_rot_changed || values_changed;
-    }
-    else
-    {
-        m_is_editing = false;
-    }
 
-    ImGui::Columns(1); // End columns
+        ImGui::Columns(1); // End columns
+    }
 
     m_is_hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
     App::GetGuiManager()->RequestGuiCaptureKeyboard(m_is_hovered);
