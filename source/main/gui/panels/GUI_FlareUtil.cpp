@@ -252,6 +252,10 @@ void FlareUtil::Draw()
                 float pos_x = flare.offsetx;
                 bool pos_changed = ImGui::SliderFloat("X", &pos_x, -10.0f, 10.0f, "%.3f");
                 ImGui::PopItemWidth();
+                if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+                {
+                    ImGui::SetTooltip("CTRL+Click for manual input");
+                }
                 {
                     float btn_width = 25.0f;
                     float spacing = ImGui::GetStyle().ItemSpacing.x;
@@ -288,6 +292,10 @@ void FlareUtil::Draw()
                 float pos_y = flare.offsety;
                 bool pos_changed = ImGui::SliderFloat("Y", &pos_y, -10.0f, 10.0f, "%.3f");
                 ImGui::PopItemWidth();
+                if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+                {
+                    ImGui::SetTooltip("CTRL+Click for manual input");
+                }
                 {
                     float btn_width = 25.0f;
                     float spacing = ImGui::GetStyle().ItemSpacing.x;
@@ -324,6 +332,10 @@ void FlareUtil::Draw()
                 float pos_z = flare.offsetz;
                 bool pos_changed = ImGui::SliderFloat("Z", &pos_z, -10.0f, 10.0f, "%.3f");
                 ImGui::PopItemWidth();
+                if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+                {
+                    ImGui::SetTooltip("CTRL+Click for manual input");
+                }
                 {
                     float btn_width = 25.0f;
                     float spacing = ImGui::GetStyle().ItemSpacing.x;
@@ -370,6 +382,10 @@ void FlareUtil::Draw()
                 flare.size = size;
             }
             ImGui::PopItemWidth();
+            if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+            {
+                ImGui::SetTooltip("CTRL+Click for manual input");
+            }
             {
                 float btn_width = 25.0f;
                 float spacing = ImGui::GetStyle().ItemSpacing.x;

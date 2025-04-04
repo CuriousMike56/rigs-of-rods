@@ -1,1 +1,6 @@
-support dashboard prop + fix reset button
+bug: reset buttons don't work for first selected mesh when opening menu for first time
+
+props: support dashboard prop steering wheel in truck file line
+ignore default "dirwheel.mesh"
+
+flexbodies: finish position/rotation editing (probably need help)

@@ -399,6 +399,10 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
                 pos_changed = true;
             }
         }
+        if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+        {
+            ImGui::SetTooltip("CTRL+Click for manual input");
+        }
         ImGui::PopItemWidth();
         
         float btn_width = 25.0f;
@@ -475,6 +479,10 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
                 {
                     rot_changed = true;
                 }
+            }
+            if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+            {
+                ImGui::SetTooltip("CTRL+Click for manual input");
             }
             ImGui::PopItemWidth();
             
@@ -590,6 +598,10 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             {
                 fov_changed = true;
             }
+        }
+        if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+        {
+            ImGui::SetTooltip("CTRL+Click for manual input");
         }
 
         if (fov_changed)
