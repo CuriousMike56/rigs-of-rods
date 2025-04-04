@@ -821,6 +821,38 @@ void FlexbodyDebug::DrawMeshInfo(Prop* prop)
 const float FINE_ADJUST_BUTTON_WIDTH = 30.0f;
 const float MARGIN = 8.0f;
 
+bool DrawRotationAdjustButton(const char* label, float& rot_value, float fine_step, bool is_plus)
+{
+    bool clicked = ImGui::Button(label, ImVec2(FINE_ADJUST_BUTTON_WIDTH,0));
+    if (clicked)
+    {
+        float step = fine_step;
+        if (ImGui::GetIO().KeyCtrl)
+            step = 90.0f;
+        else if (ImGui::GetIO().KeyShift)
+            step = 180.0f;
+            
+        rot_value += is_plus ? step : -step;
+    }
+    return clicked;
+}
+
+bool DrawPositionAdjustButton(const char* label, float& pos_value, float fine_step, bool is_plus)
+{
+    bool clicked = ImGui::Button(label, ImVec2(FINE_ADJUST_BUTTON_WIDTH,0));
+    if (clicked)
+    {
+        float step = fine_step;
+        if (ImGui::GetIO().KeyCtrl)
+            step = 0.010f;
+        else if (ImGui::GetIO().KeyShift)
+            step = 0.100f;
+            
+        pos_value += is_plus ? step : -step;
+    }
+    return clicked;
+}
+
 bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
 {
     bool changed = false;
@@ -876,27 +908,27 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
     pos_changed |= ImGui::SliderFloat("##posX", &pos[0], -10.0f, 10.0f, "X: %.3f");
     ImGui::PopItemWidth();
     ImGui::SameLine(arrow_x);
-    if (ImGui::Button("-##x", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[0] -= 0.001f; pos_changed = true; }
+    if (DrawPositionAdjustButton("-##x", pos[0], 0.001f, false)) pos_changed = true;
     ImGui::SameLine();
-    if(ImGui::Button("+##x", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[0] += 0.001f; pos_changed = true; }
+    if (DrawPositionAdjustButton("+##x", pos[0], 0.001f, true)) pos_changed = true;
 
     // Y position
     ImGui::PushItemWidth(slider_width);
     pos_changed |= ImGui::SliderFloat("##posY", &pos[1], -10.0f, 10.0f, "Y: %.3f");
     ImGui::PopItemWidth();
     ImGui::SameLine(arrow_x);
-    if (ImGui::Button("-##y", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[1] -= 0.001f; pos_changed = true; }
+    if (DrawPositionAdjustButton("-##y", pos[1], 0.001f, false)) pos_changed = true;
     ImGui::SameLine();
-    if(ImGui::Button("+##y", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[1] += 0.001f; pos_changed = true; }
+    if (DrawPositionAdjustButton("+##y", pos[1], 0.001f, true)) pos_changed = true;
 
     // Z position
     ImGui::PushItemWidth(slider_width);
     pos_changed |= ImGui::SliderFloat("##posZ", &pos[2], -10.0f, 10.0f, "Z: %.3f");
     ImGui::PopItemWidth();
     ImGui::SameLine(arrow_x);
-    if (ImGui::Button("-##z", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[2] -= 0.001f; pos_changed = true; }
+    if (DrawPositionAdjustButton("-##z", pos[2], 0.001f, false)) pos_changed = true;
     ImGui::SameLine();
-    if(ImGui::Button("+##z", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[2] += 0.001f; pos_changed = true; }
+    if (DrawPositionAdjustButton("+##z", pos[2], 0.001f, true)) pos_changed = true;
 
     // Reset position button
     if (ImGui::Button("Reset##pos"))
@@ -928,27 +960,27 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
     rot_changed |= ImGui::SliderFloat("##rotX", &rot[0], -270.0f, 270.0f, "Pitch (X): %.1f");
     ImGui::PopItemWidth();
     ImGui::SameLine(arrow_x);
-    if (ImGui::Button("-##pitch", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[0] -= 0.1f; rot_changed = true; }
+    if (DrawRotationAdjustButton("-##pitch", rot[0], 0.1f, false)) rot_changed = true;
     ImGui::SameLine();
-    if(ImGui::Button("+##pitch", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[0] += 0.1f; rot_changed = true; }
+    if (DrawRotationAdjustButton("+##pitch", rot[0], 0.1f, true)) rot_changed = true;
 
     // Yaw
     ImGui::PushItemWidth(slider_width);
     rot_changed |= ImGui::SliderFloat("##rotY", &rot[1], -270.0f, 270.0f, "Yaw (Y): %.1f");
     ImGui::PopItemWidth();
     ImGui::SameLine(arrow_x);
-    if (ImGui::Button("-##yaw", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[1] -= 0.1f; rot_changed = true; }
+    if (DrawRotationAdjustButton("-##yaw", rot[1], 0.1f, false)) rot_changed = true;
     ImGui::SameLine();
-    if(ImGui::Button("+##yaw", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[1] += 0.1f; rot_changed = true; }
+    if (DrawRotationAdjustButton("+##yaw", rot[1], 0.1f, true)) rot_changed = true;
 
     // Roll
     ImGui::PushItemWidth(slider_width);
     rot_changed |= ImGui::SliderFloat("##rotZ", &rot[2], -270.0f, 270.0f, "Roll (Z): %.1f");
     ImGui::PopItemWidth();
     ImGui::SameLine(arrow_x);
-    if (ImGui::Button("-##roll", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[2] -= 0.1f; rot_changed = true; }
+    if (DrawRotationAdjustButton("-##roll", rot[2], 0.1f, false)) rot_changed = true;
     ImGui::SameLine();
-    if(ImGui::Button("+##roll", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[2] += 0.1f; rot_changed = true; }
+    if (DrawRotationAdjustButton("+##roll", rot[2], 0.1f, true)) rot_changed = true;
 
     // Reset rotation button
     if (ImGui::Button("Reset##rot"))
@@ -1062,27 +1094,27 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     pos_changed |= ImGui::SliderFloat("##posX", &pos[0], -10.0f, 10.0f, "X: %.3f");
     ImGui::PopItemWidth();
     ImGui::SameLine(arrow_x);
-    if (ImGui::Button("-##x", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[0] -= 0.001f; pos_changed = true; }
+    if (DrawPositionAdjustButton("-##x", pos[0], 0.001f, false)) pos_changed = true;
     ImGui::SameLine();
-    if(ImGui::Button("+##x", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[0] += 0.001f; pos_changed = true; }
+    if (DrawPositionAdjustButton("+##x", pos[0], 0.001f, true)) pos_changed = true;
 
     // Y position
     ImGui::PushItemWidth(slider_width);
     pos_changed |= ImGui::SliderFloat("##posY", &pos[1], -10.0f, 10.0f, "Y: %.3f");
     ImGui::PopItemWidth();
     ImGui::SameLine(arrow_x);
-    if (ImGui::Button("-##y", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[1] -= 0.001f; pos_changed = true; }
+    if (DrawPositionAdjustButton("-##y", pos[1], 0.001f, false)) pos_changed = true;
     ImGui::SameLine();
-    if(ImGui::Button("+##y", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[1] += 0.001f; pos_changed = true; }
+    if (DrawPositionAdjustButton("+##y", pos[1], 0.001f, true)) pos_changed = true;
 
     // Z position
     ImGui::PushItemWidth(slider_width);
     pos_changed |= ImGui::SliderFloat("##posZ", &pos[2], -10.0f, 10.0f, "Z: %.3f");
     ImGui::PopItemWidth();
     ImGui::SameLine(arrow_x);
-    if (ImGui::Button("-##z", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[2] -= 0.001f; pos_changed = true; }
+    if (DrawPositionAdjustButton("-##z", pos[2], 0.001f, false)) pos_changed = true;
     ImGui::SameLine();
-    if(ImGui::Button("+##z", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { pos[2] += 0.001f; pos_changed = true; }
+    if (DrawPositionAdjustButton("+##z", pos[2], 0.001f, true)) pos_changed = true;
 
     // Reset position button
     if (ImGui::Button("Reset##pos"))
@@ -1125,27 +1157,27 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     rot_changed |= ImGui::SliderFloat("##rotX", &rot[0], -270.0f, 270.0f, "Pitch (X): %.1f");
     ImGui::PopItemWidth();
     ImGui::SameLine(arrow_x);
-    if (ImGui::Button("-##pitch", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[0] -= 0.1f; rot_changed = true; }
+    if (DrawRotationAdjustButton("-##pitch", rot[0], 0.1f, false)) rot_changed = true;
     ImGui::SameLine();
-    if(ImGui::Button("+##pitch", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[0] += 0.1f; rot_changed = true; }
+    if (DrawRotationAdjustButton("+##pitch", rot[0], 0.1f, true)) rot_changed = true;
 
     // Yaw
     ImGui::PushItemWidth(slider_width);
     rot_changed |= ImGui::SliderFloat("##rotY", &rot[1], -270.0f, 270.0f, "Yaw (Y): %.1f");
     ImGui::PopItemWidth();
     ImGui::SameLine(arrow_x);
-    if (ImGui::Button("-##yaw", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[1] -= 0.1f; rot_changed = true; }
+    if (DrawRotationAdjustButton("-##yaw", rot[1], 0.1f, false)) rot_changed = true;
     ImGui::SameLine();
-    if(ImGui::Button("+##yaw", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[1] += 0.1f; rot_changed = true; }
+    if (DrawRotationAdjustButton("+##yaw", rot[1], 0.1f, true)) rot_changed = true;
 
     // Roll
     ImGui::PushItemWidth(slider_width);
     rot_changed |= ImGui::SliderFloat("##rotZ", &rot[2], -270.0f, 270.0f, "Roll (Z): %.1f");
     ImGui::PopItemWidth();
     ImGui::SameLine(arrow_x);
-    if (ImGui::Button("-##roll", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[2] -= 0.1f; rot_changed = true; }
+    if (DrawRotationAdjustButton("-##roll", rot[2], 0.1f, false)) rot_changed = true;
     ImGui::SameLine();
-    if(ImGui::Button("+##roll", ImVec2(FINE_ADJUST_BUTTON_WIDTH,0))) { rot[2] += 0.1f; rot_changed = true; }
+    if (DrawRotationAdjustButton("+##roll", rot[2], 0.1f, true)) rot_changed = true;
 
     // Reset rotation button 
     if (ImGui::Button("Reset##rot"))
