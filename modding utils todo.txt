@@ -1,0 +1,4 @@
+-/+ 90 degrees buttons for rotation
+
+support dashboard prop + fix reset button 
+ 

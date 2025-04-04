@@ -156,7 +156,7 @@ void FlareUtil::Draw()
             flare_t& flare = m_actor->ar_flares[m_selected_flare];
             ImGui::BeginGroup();
 
-            // Truck file format line
+            // Truck file format line for easy copy-paste
 
             ImGui::TextWrapped("flares2 Truck file format line:");
             ImGui::TextWrapped("NOTE: This currently omits the material name, don't forget it!");
@@ -178,6 +178,11 @@ void FlareUtil::Draw()
             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
             ImGui::InputText("##truckline", const_cast<char*>(csv.c_str()), csv.length(), ImGuiInputTextFlags_ReadOnly);
             ImGui::PopStyleColor();
+
+            if (ImGui::Button("Copy to clipboard"))
+            {
+                ImGui::SetClipboardText(csv.c_str());
+            }
 
             ImGui::Separator();
 

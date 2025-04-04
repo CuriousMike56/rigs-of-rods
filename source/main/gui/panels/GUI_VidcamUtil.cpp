@@ -253,6 +253,11 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
         ImGui::InputText("##truckline", const_cast<char*>(csv.c_str()), csv.length(), ImGuiInputTextFlags_ReadOnly);
         ImGui::PopStyleColor();
+
+        if (ImGui::Button("Copy to clipboard"))
+        {
+            ImGui::SetClipboardText(csv.c_str());
+        }
     }
 
     ImGui::Separator();

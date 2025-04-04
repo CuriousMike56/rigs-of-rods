@@ -1020,6 +1020,32 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
         m_values_initialized = true;
     }
 
+    // Truck file format line for easy copy-paste
+    ImGui::TextWrapped("props Truck file format line:");
+    ImGui::TextWrapped(";ref,  x,  y, offsetx, offsety, offsetz, rotx, roty, rotz, mesh");
+    
+    std::string csv = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {:.0f}, {:.0f}, {:.0f}, {}",
+        prop->pp_node_ref,
+        prop->pp_node_x,
+        prop->pp_node_y,
+        prop->pp_offset.x,
+        prop->pp_offset.y,
+        prop->pp_offset.z,
+        prop->pp_rota.x,
+        prop->pp_rota.y,
+        prop->pp_rota.z,
+        (prop->pp_mesh_obj && prop->pp_mesh_obj->getLoadedMesh()) ? prop->pp_mesh_obj->getLoadedMesh()->getName() : "unknown.mesh");
+
+    // Display in a selectable text box
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+    ImGui::InputText("##truckline", const_cast<char*>(csv.c_str()), csv.length(), ImGuiInputTextFlags_ReadOnly);
+    ImGui::PopStyleColor();
+
+    if (ImGui::Button("Copy to clipboard"))
+    {
+        ImGui::SetClipboardText(csv.c_str());
+    }
+
     // Position sliders with fine adjustment
     ImGui::Text("Position offset:");
     bool pos_changed = false;
