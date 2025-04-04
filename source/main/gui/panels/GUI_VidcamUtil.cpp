@@ -402,7 +402,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         }
         if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
         {
-            ImGui::SetTooltip("CTRL+Click for manual input");
+            ImGui::SetTooltip("CTRL + Click for manual input");
         }
         ImGui::PopItemWidth();
         
@@ -418,6 +418,14 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             offset[i] = std::round((offset[i] - step) * 1000.0f) / 1000.0f;
             pos_changed = true;
         }
+        if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+        {
+            ImGui::BeginTooltip();
+            ImGui::Text("Click: 0.001 adjustment");
+            ImGui::Text("CTRL + Click: 0.010 adjustment");
+            ImGui::Text("SHIFT + Click: 0.100 adjustment");
+            ImGui::EndTooltip();
+        }
         ImGui::SameLine();
         if(ImGui::Button("+", ImVec2(btn_width,0))) 
         { 
@@ -428,6 +436,14 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
                 step = 0.100f;
             offset[i] = std::round((offset[i] + step) * 1000.0f) / 1000.0f;
             pos_changed = true;
+        }
+        if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+        {
+            ImGui::BeginTooltip();
+            ImGui::Text("Click: 0.001 adjustment");
+            ImGui::Text("CTRL + Click: 0.010 adjustment");
+            ImGui::Text("SHIFT + Click: 0.100 adjustment");
+            ImGui::EndTooltip();
         }
         ImGui::PopID();
     }
@@ -483,7 +499,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             }
             if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
             {
-                ImGui::SetTooltip("CTRL+Click for manual input");
+                ImGui::SetTooltip("CTRL + Click for manual input");
             }
             ImGui::PopItemWidth();
             
@@ -499,6 +515,14 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
                 rotation[i] = std::max(min_angle, rotation[i] - step);
                 rot_changed = true;
             }
+            if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+            {
+                ImGui::BeginTooltip();
+                ImGui::Text("Click: 0.1 degree adjustment");
+                ImGui::Text("CTRL + Click: 1 degree adjustment"); 
+                ImGui::Text("SHIFT + Click: 10 degrees adjustment");
+                ImGui::EndTooltip();
+            }
             ImGui::SameLine();
             if(ImGui::Button("+", ImVec2(btn_width,0))) 
             { 
@@ -509,6 +533,14 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
                     step = 10.0f;
                 rotation[i] = std::min(max_angle, rotation[i] + step);
                 rot_changed = true;
+            }
+            if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+            {
+                ImGui::BeginTooltip();
+                ImGui::Text("Click: 0.1 degree adjustment");
+                ImGui::Text("CTRL + Click: 1 degree adjustment");
+                ImGui::Text("SHIFT + Click: 10 degrees adjustment");
+                ImGui::EndTooltip();
             }
             ImGui::PopID();
         }
@@ -602,7 +634,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         }
         if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
         {
-            ImGui::SetTooltip("CTRL+Click for manual input");
+            ImGui::SetTooltip("CTRL + Click for manual input");
         }
 
         if (fov_changed)

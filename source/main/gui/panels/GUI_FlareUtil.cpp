@@ -255,7 +255,7 @@ void FlareUtil::Draw()
                 ImGui::PopItemWidth();
                 if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
                 {
-                    ImGui::SetTooltip("CTRL+Click for manual input");
+                    ImGui::SetTooltip("CTRL + Click for manual input");
                 }
                 {
                     float btn_width = 25.0f;
@@ -271,6 +271,14 @@ void FlareUtil::Draw()
                         pos_x -= step;
                         pos_changed = true;
                     }
+                    if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::Text("Click: 0.001 adjustment");
+                        ImGui::Text("CTRL + Click: 0.010 adjustment");
+                        ImGui::Text("SHIFT + Click: 0.100 adjustment");
+                        ImGui::EndTooltip();
+                    }
                     ImGui::SameLine();
                     if(ImGui::Button("+##x", ImVec2(btn_width,0)))
                     { 
@@ -281,6 +289,14 @@ void FlareUtil::Draw()
                             step = 0.100f;
                         pos_x += step;
                         pos_changed = true;
+                    }
+                    if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::Text("Click: 0.001 adjustment");
+                        ImGui::Text("CTRL + Click: 0.010 adjustment");
+                        ImGui::Text("SHIFT + Click: 0.100 adjustment");
+                        ImGui::EndTooltip();
                     }
                 }
                 if (pos_changed) { flare.offsetx = pos_x; }
@@ -295,7 +311,7 @@ void FlareUtil::Draw()
                 ImGui::PopItemWidth();
                 if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
                 {
-                    ImGui::SetTooltip("CTRL+Click for manual input");
+                    ImGui::SetTooltip("CTRL + Click for manual input");
                 }
                 {
                     float btn_width = 25.0f;
@@ -311,6 +327,14 @@ void FlareUtil::Draw()
                         pos_y -= step;
                         pos_changed = true;
                     }
+                    if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::Text("Click: 0.001 adjustment");
+                        ImGui::Text("CTRL + Click: 0.010 adjustment");
+                        ImGui::Text("SHIFT + Click: 0.100 adjustment");
+                        ImGui::EndTooltip();
+                    }
                     ImGui::SameLine();
                     if(ImGui::Button("+##y", ImVec2(btn_width,0)))
                     { 
@@ -321,6 +345,14 @@ void FlareUtil::Draw()
                             step = 0.100f;
                         pos_y += step;
                         pos_changed = true;
+                    }
+                    if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::Text("Click: 0.001 adjustment");
+                        ImGui::Text("CTRL + Click: 0.010 adjustment");
+                        ImGui::Text("SHIFT + Click: 0.100 adjustment");
+                        ImGui::EndTooltip();
                     }
                 }
                 if (pos_changed) { flare.offsety = pos_y; }
@@ -335,7 +367,7 @@ void FlareUtil::Draw()
                 ImGui::PopItemWidth();
                 if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
                 {
-                    ImGui::SetTooltip("CTRL+Click for manual input");
+                    ImGui::SetTooltip("CTRL + Click for manual input");
                 }
                 {
                     float btn_width = 25.0f;
@@ -351,6 +383,14 @@ void FlareUtil::Draw()
                         pos_z -= step;
                         pos_changed = true;
                     }
+                    if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::Text("Click: 0.001 adjustment");
+                        ImGui::Text("CTRL + Click: 0.010 adjustment");
+                        ImGui::Text("SHIFT + Click: 0.100 adjustment");
+                        ImGui::EndTooltip();
+                    }
                     ImGui::SameLine();
                     if(ImGui::Button("+##z", ImVec2(btn_width,0)))
                     { 
@@ -361,6 +401,14 @@ void FlareUtil::Draw()
                             step = 0.100f;
                         pos_z += step;
                         pos_changed = true;
+                    }
+                    if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::Text("Click: 0.001 adjustment");
+                        ImGui::Text("CTRL + Click: 0.010 adjustment");
+                        ImGui::Text("SHIFT + Click: 0.100 adjustment");
+                        ImGui::EndTooltip();
                     }
                 }
                 if (pos_changed) { flare.offsetz = pos_z; }
@@ -385,7 +433,7 @@ void FlareUtil::Draw()
             ImGui::PopItemWidth();
             if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
             {
-                ImGui::SetTooltip("CTRL+Click for manual input");
+                ImGui::SetTooltip("CTRL + Click for manual input");
             }
             {
                 float btn_width = 25.0f;
@@ -412,6 +460,14 @@ void FlareUtil::Draw()
                     size += step;
                     flare.size = size;
                 }
+            }
+            if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+            {
+                ImGui::BeginTooltip();
+                ImGui::Text("Click: 0.001 adjustment");
+                ImGui::Text("CTRL + Click: 0.010 adjustment");
+                ImGui::Text("SHIFT + Click: 0.100 adjustment");
+                ImGui::EndTooltip();
             }
             if (ImGui::Button(_LC("FlareUtil", "Reset##size")))
             {

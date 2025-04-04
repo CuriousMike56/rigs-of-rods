@@ -859,6 +859,14 @@ bool DrawRotationAdjustButton(const char* label, float& rot_value, float fine_st
             
         rot_value += is_plus ? step : -step;
     }
+    if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+    {
+        ImGui::BeginTooltip();
+        ImGui::Text("Click: %.1f degree adjustment", fine_step);
+        ImGui::Text("CTRL + Click: 90 degree adjustment");
+        ImGui::Text("SHIFT + Click: 180 degree adjustment");
+        ImGui::EndTooltip();
+    }
     return clicked;
 }
 
@@ -874,6 +882,14 @@ bool DrawPositionAdjustButton(const char* label, float& pos_value, float fine_st
             step = 0.100f;
             
         pos_value += is_plus ? step : -step;
+    }
+    if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+    {
+        ImGui::BeginTooltip();
+        ImGui::Text("Click: %.3f adjustment", fine_step);
+        ImGui::Text("CTRL + Click: 0.010 adjustment");
+        ImGui::Text("SHIFT + Click: 0.100 adjustment");
+        ImGui::EndTooltip();
     }
     return clicked;
 }
@@ -934,7 +950,7 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
     ImGui::PopItemWidth();
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
     {
-        ImGui::SetTooltip("CTRL+Click for manual input");
+        ImGui::SetTooltip("CTRL + Click for manual input");
     }
     ImGui::SameLine(arrow_x);
     if (DrawPositionAdjustButton("-##x", pos[0], 0.001f, false)) pos_changed = true;
@@ -947,7 +963,7 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
     ImGui::PopItemWidth();
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
     {
-        ImGui::SetTooltip("CTRL+Click for manual input");
+        ImGui::SetTooltip("CTRL + Click for manual input");
     }
     ImGui::SameLine(arrow_x);
     if (DrawPositionAdjustButton("-##y", pos[1], 0.001f, false)) pos_changed = true;
@@ -960,7 +976,7 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
     ImGui::PopItemWidth();
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
     {
-        ImGui::SetTooltip("CTRL+Click for manual input");
+        ImGui::SetTooltip("CTRL + Click for manual input");
     }
     ImGui::SameLine(arrow_x);
     if (DrawPositionAdjustButton("-##z", pos[2], 0.001f, false)) pos_changed = true;
@@ -998,7 +1014,7 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
     ImGui::PopItemWidth();
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
     {
-        ImGui::SetTooltip("CTRL+Click for manual input");
+        ImGui::SetTooltip("CTRL + Click for manual input");
     }
     ImGui::SameLine(arrow_x);
     if (DrawRotationAdjustButton("-##pitch", rot[0], 0.1f, false)) rot_changed = true;
@@ -1011,7 +1027,7 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
     ImGui::PopItemWidth();
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
     {
-        ImGui::SetTooltip("CTRL+Click for manual input");
+        ImGui::SetTooltip("CTRL + Click for manual input");
     }
     ImGui::SameLine(arrow_x);
     if (DrawRotationAdjustButton("-##yaw", rot[1], 0.1f, false)) rot_changed = true;
@@ -1024,7 +1040,7 @@ bool FlexbodyDebug::DrawFlexbodyOffsetRotationEdit(FlexBody* flexbody)
     ImGui::PopItemWidth();
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
     {
-        ImGui::SetTooltip("CTRL+Click for manual input");
+        ImGui::SetTooltip("CTRL + Click for manual input");
     }
     ImGui::SameLine(arrow_x);
     if (DrawRotationAdjustButton("-##roll", rot[2], 0.1f, false)) rot_changed = true;
@@ -1145,7 +1161,7 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     ImGui::PopItemWidth();
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
     {
-        ImGui::SetTooltip("CTRL+Click for manual input");
+        ImGui::SetTooltip("CTRL + Click for manual input");
     }
     ImGui::SameLine(arrow_x);
     if (DrawPositionAdjustButton("-##x", pos[0], 0.001f, false)) pos_changed = true;
@@ -1158,7 +1174,7 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     ImGui::PopItemWidth();
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
     {
-        ImGui::SetTooltip("CTRL+Click for manual input");
+        ImGui::SetTooltip("CTRL + Click for manual input");
     }
     ImGui::SameLine(arrow_x);
     if (DrawPositionAdjustButton("-##y", pos[1], 0.001f, false)) pos_changed = true;
@@ -1171,7 +1187,7 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     ImGui::PopItemWidth();
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
     {
-        ImGui::SetTooltip("CTRL+Click for manual input");
+        ImGui::SetTooltip("CTRL + Click for manual input");
     }
     ImGui::SameLine(arrow_x);
     if (DrawPositionAdjustButton("-##z", pos[2], 0.001f, false)) pos_changed = true;
@@ -1220,7 +1236,7 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     ImGui::PopItemWidth();
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
     {
-        ImGui::SetTooltip("CTRL+Click for manual input");
+        ImGui::SetTooltip("CTRL + Click for manual input");
     }
     ImGui::SameLine(arrow_x);
     if (DrawRotationAdjustButton("-##pitch", rot[0], 0.1f, false)) rot_changed = true;
@@ -1233,7 +1249,7 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     ImGui::PopItemWidth();
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
     {
-        ImGui::SetTooltip("CTRL+Click for manual input");
+        ImGui::SetTooltip("CTRL + Click for manual input");
     }
     ImGui::SameLine(arrow_x);
     if (DrawRotationAdjustButton("-##yaw", rot[1], 0.1f, false)) rot_changed = true;
@@ -1246,7 +1262,7 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     ImGui::PopItemWidth();
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
     {
-        ImGui::SetTooltip("CTRL+Click for manual input");
+        ImGui::SetTooltip("CTRL + Click for manual input");
     }
     ImGui::SameLine(arrow_x);
     if (DrawRotationAdjustButton("-##roll", rot[2], 0.1f, false)) rot_changed = true;
