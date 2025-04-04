@@ -158,8 +158,9 @@ void FlareUtil::Draw()
 
             // Truck file format line for easy copy-paste
 
-            ImGui::TextWrapped("flares2 Truck file format line:");
+            ImGui::TextWrapped("Truck file format line:");
             ImGui::TextWrapped("NOTE: This currently omits the material name, don't forget it!");
+            ImGui::TextWrapped("flares2");
             ImGui::TextWrapped(";RefNode, X, Y, OffsetX, OffsetY, OffsetZ, Type, ControlNumber, BlinkDelay, size, ...");
 
             std::string csv = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {}, {:.3f}",

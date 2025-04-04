@@ -1102,7 +1102,8 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     }
 
     // Truck file format line for easy copy-paste
-    ImGui::TextWrapped("props Truck file format line:");
+    ImGui::TextWrapped("Truck file format line:");
+    ImGui::TextWrapped("props");
     ImGui::TextWrapped(";ref,  x,  y, offsetx, offsety, offsetz, rotx, roty, rotz, mesh");
     
     std::string csv = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {:.0f}, {:.0f}, {:.0f}, {}",

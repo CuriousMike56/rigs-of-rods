@@ -215,8 +215,9 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
 
     // Truck file format line for easy copy-paste
     {
-        ImGui::TextWrapped("videocamera Truck file format line:");
+        ImGui::TextWrapped("Truck file format line:");
         ImGui::TextWrapped("NOTE: This currently only includes the first 12 values, don't forget the rest!");
+        ImGui::TextWrapped("videocamera");
         ImGui::TextWrapped(";nref, nx, ny, ncam, nlookat, offx, offy, offz, rotx, roty, rotz, fov ...");
         
         // Get Euler angles
