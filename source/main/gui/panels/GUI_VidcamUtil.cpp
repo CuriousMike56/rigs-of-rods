@@ -526,7 +526,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
                 ImGui::BeginTooltip();
                 ImGui::Text("Click/Hold: 0.1 degree adjustment");
                 ImGui::Text("CTRL + Click/Hold: 1 degree adjustment"); 
-                ImGui::Text("SHIFT + Click/Hold: 10 degrees adjustment");
+                ImGui::Text("SHIFT + Click/Hold: 10 degree adjustment");
                 ImGui::EndTooltip();
             }
             ImGui::SameLine();
@@ -643,6 +643,50 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
         {
             ImGui::SetTooltip("CTRL + Click for manual input");
+        }
+
+        float btn_width = 25.0f;
+        ImGui::SameLine();
+        ImGui::PushButtonRepeat(true);
+        if (ImGui::Button("-##fov", ImVec2(btn_width,0))) 
+        { 
+            float step = 0.1f;
+            if (ImGui::GetIO().KeyCtrl)
+                step = 1.0f;
+            else if (ImGui::GetIO().KeyShift)
+                step = 5.0f;
+            m_current_fov = std::max(10.0f, std::round((m_current_fov - step) * 10.0f) / 10.0f);
+            fov_changed = true;
+        }
+        ImGui::PopButtonRepeat();
+        if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+        {
+            ImGui::BeginTooltip();
+            ImGui::Text("Click/Hold: 0.1 degree adjustment");
+            ImGui::Text("CTRL + Click/Hold: 1 degree adjustment");
+            ImGui::Text("SHIFT + Click/Hold: 5 degree adjustment");
+            ImGui::EndTooltip();
+        }
+        ImGui::SameLine();
+        ImGui::PushButtonRepeat(true);
+        if(ImGui::Button("+##fov", ImVec2(btn_width,0))) 
+        { 
+            float step = 0.1f;
+            if (ImGui::GetIO().KeyCtrl)
+                step = 1.0f;
+            else if (ImGui::GetIO().KeyShift)
+                step = 5.0f;
+            m_current_fov = std::min(120.0f, std::round((m_current_fov + step) * 10.0f) / 10.0f);
+            fov_changed = true;
+        }
+        ImGui::PopButtonRepeat();
+        if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
+        {
+            ImGui::BeginTooltip();
+            ImGui::Text("Click/Hold: 0.1 degree adjustment");
+            ImGui::Text("CTRL + Click/Hold: 1 degree adjustment");
+            ImGui::Text("SHIFT + Click/Hold: 5 degree adjustment");
+            ImGui::EndTooltip();
         }
 
         if (fov_changed)
