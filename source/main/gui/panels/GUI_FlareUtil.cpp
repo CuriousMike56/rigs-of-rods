@@ -87,7 +87,7 @@ void FlareUtil::Draw()
     if (!m_is_visible)
         return;
 
-    ImGui::SetNextWindowSize(ImVec2(500.0f, 400.0f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(1000, 600), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
 
     if (ImGui::Begin(_LC("FlareUtil", "Flare Utility (CM)"), &m_is_visible))
