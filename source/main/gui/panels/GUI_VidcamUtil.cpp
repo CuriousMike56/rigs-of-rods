@@ -408,6 +408,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         
         float btn_width = 25.0f;
         ImGui::SameLine();
+        ImGui::PushButtonRepeat(true);
         if (ImGui::Button("-", ImVec2(btn_width,0))) 
         { 
             float step = 0.001f;
@@ -418,15 +419,17 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             offset[i] = std::round((offset[i] - step) * 1000.0f) / 1000.0f;
             pos_changed = true;
         }
+        ImGui::PopButtonRepeat();
         if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
         {
             ImGui::BeginTooltip();
-            ImGui::Text("Click: 0.001 adjustment");
-            ImGui::Text("CTRL + Click: 0.010 adjustment");
-            ImGui::Text("SHIFT + Click: 0.100 adjustment");
+            ImGui::Text("Click/Hold: 0.001 adjustment");
+            ImGui::Text("CTRL + Click/Hold: 0.010 adjustment");
+            ImGui::Text("SHIFT + Click/Hold: 0.100 adjustment");
             ImGui::EndTooltip();
         }
         ImGui::SameLine();
+        ImGui::PushButtonRepeat(true);
         if(ImGui::Button("+", ImVec2(btn_width,0))) 
         { 
             float step = 0.001f;
@@ -437,12 +440,13 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             offset[i] = std::round((offset[i] + step) * 1000.0f) / 1000.0f;
             pos_changed = true;
         }
+        ImGui::PopButtonRepeat();
         if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
         {
             ImGui::BeginTooltip();
-            ImGui::Text("Click: 0.001 adjustment");
-            ImGui::Text("CTRL + Click: 0.010 adjustment");
-            ImGui::Text("SHIFT + Click: 0.100 adjustment");
+            ImGui::Text("Click/Hold: 0.001 adjustment");
+            ImGui::Text("CTRL + Click/Hold: 0.010 adjustment");
+            ImGui::Text("SHIFT + Click/Hold: 0.100 adjustment");
             ImGui::EndTooltip();
         }
         ImGui::PopID();
@@ -505,6 +509,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             
             float btn_width = 25.0f;
             ImGui::SameLine();
+            ImGui::PushButtonRepeat(true);
             if (ImGui::Button("-", ImVec2(btn_width,0))) 
             { 
                 float step = 0.1f;
@@ -515,15 +520,17 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
                 rotation[i] = std::max(min_angle, rotation[i] - step);
                 rot_changed = true;
             }
+            ImGui::PopButtonRepeat();
             if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
             {
                 ImGui::BeginTooltip();
-                ImGui::Text("Click: 0.1 degree adjustment");
-                ImGui::Text("CTRL + Click: 1 degree adjustment"); 
-                ImGui::Text("SHIFT + Click: 10 degrees adjustment");
+                ImGui::Text("Click/Hold: 0.1 degree adjustment");
+                ImGui::Text("CTRL + Click/Hold: 1 degree adjustment"); 
+                ImGui::Text("SHIFT + Click/Hold: 10 degrees adjustment");
                 ImGui::EndTooltip();
             }
             ImGui::SameLine();
+            ImGui::PushButtonRepeat(true);
             if(ImGui::Button("+", ImVec2(btn_width,0))) 
             { 
                 float step = 0.1f;
@@ -534,12 +541,13 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
                 rotation[i] = std::min(max_angle, rotation[i] + step);
                 rot_changed = true;
             }
+            ImGui::PopButtonRepeat();
             if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
             {
                 ImGui::BeginTooltip();
-                ImGui::Text("Click: 0.1 degree adjustment");
-                ImGui::Text("CTRL + Click: 1 degree adjustment");
-                ImGui::Text("SHIFT + Click: 10 degrees adjustment");
+                ImGui::Text("Click/Hold: 0.1 degree adjustment");
+                ImGui::Text("CTRL + Click/Hold: 1 degree adjustment");
+                ImGui::Text("SHIFT + Click/Hold: 10 degrees adjustment");
                 ImGui::EndTooltip();
             }
             ImGui::PopID();

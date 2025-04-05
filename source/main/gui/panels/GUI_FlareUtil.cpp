@@ -261,6 +261,7 @@ void FlareUtil::Draw()
                     float btn_width = 25.0f;
                     float spacing = ImGui::GetStyle().ItemSpacing.x;
                     ImGui::SameLine();
+                    ImGui::PushButtonRepeat(true);
                     if (ImGui::Button("-##x", ImVec2(btn_width,0))) 
                     { 
                         float step = 0.001f;
@@ -271,15 +272,17 @@ void FlareUtil::Draw()
                         pos_x -= step;
                         pos_changed = true;
                     }
+                    ImGui::PopButtonRepeat();
                     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
                     {
                         ImGui::BeginTooltip();
-                        ImGui::Text("Click: 0.001 adjustment");
-                        ImGui::Text("CTRL + Click: 0.010 adjustment");
-                        ImGui::Text("SHIFT + Click: 0.100 adjustment");
+                        ImGui::Text("Click/Hold: 0.001 adjustment");
+                        ImGui::Text("CTRL + Click/Hold: 0.010 adjustment");
+                        ImGui::Text("SHIFT + Click/Hold: 0.100 adjustment");
                         ImGui::EndTooltip();
                     }
                     ImGui::SameLine();
+                    ImGui::PushButtonRepeat(true);
                     if(ImGui::Button("+##x", ImVec2(btn_width,0)))
                     { 
                         float step = 0.001f;
@@ -290,12 +293,13 @@ void FlareUtil::Draw()
                         pos_x += step;
                         pos_changed = true;
                     }
+                    ImGui::PopButtonRepeat();
                     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
                     {
                         ImGui::BeginTooltip();
-                        ImGui::Text("Click: 0.001 adjustment");
-                        ImGui::Text("CTRL + Click: 0.010 adjustment");
-                        ImGui::Text("SHIFT + Click: 0.100 adjustment");
+                        ImGui::Text("Click/Hold: 0.001 adjustment");
+                        ImGui::Text("CTRL + Click/Hold: 0.010 adjustment");
+                        ImGui::Text("SHIFT + Click/Hold: 0.100 adjustment");
                         ImGui::EndTooltip();
                     }
                 }
@@ -317,6 +321,7 @@ void FlareUtil::Draw()
                     float btn_width = 25.0f;
                     float spacing = ImGui::GetStyle().ItemSpacing.x;
                     ImGui::SameLine();
+                    ImGui::PushButtonRepeat(true);
                     if (ImGui::Button("-##y", ImVec2(btn_width,0)))
                     { 
                         float step = 0.001f;
@@ -327,15 +332,17 @@ void FlareUtil::Draw()
                         pos_y -= step;
                         pos_changed = true;
                     }
+                    ImGui::PopButtonRepeat();
                     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
                     {
                         ImGui::BeginTooltip();
-                        ImGui::Text("Click: 0.001 adjustment");
-                        ImGui::Text("CTRL + Click: 0.010 adjustment");
-                        ImGui::Text("SHIFT + Click: 0.100 adjustment");
+                        ImGui::Text("Click/Hold: 0.001 adjustment");
+                        ImGui::Text("CTRL + Click/Hold: 0.010 adjustment");
+                        ImGui::Text("SHIFT + Click/Hold: 0.100 adjustment");
                         ImGui::EndTooltip();
                     }
                     ImGui::SameLine();
+                    ImGui::PushButtonRepeat(true);
                     if(ImGui::Button("+##y", ImVec2(btn_width,0)))
                     { 
                         float step = 0.001f;
@@ -346,12 +353,13 @@ void FlareUtil::Draw()
                         pos_y += step;
                         pos_changed = true;
                     }
+                    ImGui::PopButtonRepeat();
                     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
                     {
                         ImGui::BeginTooltip();
-                        ImGui::Text("Click: 0.001 adjustment");
-                        ImGui::Text("CTRL + Click: 0.010 adjustment");
-                        ImGui::Text("SHIFT + Click: 0.100 adjustment");
+                        ImGui::Text("Click/Hold: 0.001 adjustment");
+                        ImGui::Text("CTRL + Click/Hold: 0.010 adjustment");
+                        ImGui::Text("SHIFT + Click/Hold: 0.100 adjustment");
                         ImGui::EndTooltip();
                     }
                 }
@@ -373,6 +381,7 @@ void FlareUtil::Draw()
                     float btn_width = 25.0f;
                     float spacing = ImGui::GetStyle().ItemSpacing.x;
                     ImGui::SameLine();
+                    ImGui::PushButtonRepeat(true);
                     if (ImGui::Button("-##z", ImVec2(btn_width,0)))
                     { 
                         float step = 0.001f;
@@ -383,15 +392,17 @@ void FlareUtil::Draw()
                         pos_z -= step;
                         pos_changed = true;
                     }
+                    ImGui::PopButtonRepeat();
                     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
                     {
                         ImGui::BeginTooltip();
-                        ImGui::Text("Click: 0.001 adjustment");
-                        ImGui::Text("CTRL + Click: 0.010 adjustment");
-                        ImGui::Text("SHIFT + Click: 0.100 adjustment");
+                        ImGui::Text("Click/Hold: 0.001 adjustment");
+                        ImGui::Text("CTRL + Click/Hold: 0.010 adjustment");
+                        ImGui::Text("SHIFT + Click/Hold: 0.100 adjustment");
                         ImGui::EndTooltip();
                     }
                     ImGui::SameLine();
+                    ImGui::PushButtonRepeat(true);
                     if(ImGui::Button("+##z", ImVec2(btn_width,0)))
                     { 
                         float step = 0.001f;
@@ -402,12 +413,13 @@ void FlareUtil::Draw()
                         pos_z += step;
                         pos_changed = true;
                     }
+                    ImGui::PopButtonRepeat();
                     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
                     {
                         ImGui::BeginTooltip();
-                        ImGui::Text("Click: 0.001 adjustment");
-                        ImGui::Text("CTRL + Click: 0.010 adjustment");
-                        ImGui::Text("SHIFT + Click: 0.100 adjustment");
+                        ImGui::Text("Click/Hold: 0.001 adjustment");
+                        ImGui::Text("CTRL + Click/Hold: 0.010 adjustment");
+                        ImGui::Text("SHIFT + Click/Hold: 0.100 adjustment");
                         ImGui::EndTooltip();
                     }
                 }
@@ -439,6 +451,7 @@ void FlareUtil::Draw()
                 float btn_width = 25.0f;
                 float spacing = ImGui::GetStyle().ItemSpacing.x;
                 ImGui::SameLine();
+                ImGui::PushButtonRepeat(true);
                 if (ImGui::Button("-##size", ImVec2(btn_width,0))) 
                 { 
                     float step = 0.001f;
@@ -449,7 +462,9 @@ void FlareUtil::Draw()
                     size -= step;
                     flare.size = size;
                 }
+                ImGui::PopButtonRepeat();
                 ImGui::SameLine();
+                ImGui::PushButtonRepeat(true);
                 if(ImGui::Button("+##size", ImVec2(btn_width,0)))
                 { 
                     float step = 0.001f;
@@ -460,13 +475,14 @@ void FlareUtil::Draw()
                     size += step;
                     flare.size = size;
                 }
+                ImGui::PopButtonRepeat();
             }
             if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
             {
                 ImGui::BeginTooltip();
-                ImGui::Text("Click: 0.001 adjustment");
-                ImGui::Text("CTRL + Click: 0.010 adjustment");
-                ImGui::Text("SHIFT + Click: 0.100 adjustment");
+                ImGui::Text("Click/Hold: 0.001 adjustment");
+                ImGui::Text("CTRL + Click/Hold: 0.010 adjustment");
+                ImGui::Text("SHIFT + Click/Hold: 0.100 adjustment");
                 ImGui::EndTooltip();
             }
             if (ImGui::Button(_LC("FlareUtil", "Reset##size")))

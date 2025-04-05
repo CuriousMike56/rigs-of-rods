@@ -848,8 +848,9 @@ const float MARGIN = 8.0f;
 
 bool DrawRotationAdjustButton(const char* label, float& rot_value, float fine_step, bool is_plus)
 {
-    bool clicked = ImGui::Button(label, ImVec2(FINE_ADJUST_BUTTON_WIDTH,0));
-    if (clicked)
+    bool clicked = false;
+    ImGui::PushButtonRepeat(true);              
+    if (ImGui::Button(label, ImVec2(FINE_ADJUST_BUTTON_WIDTH,0)))
     {
         float step = fine_step;
         if (ImGui::GetIO().KeyCtrl)
@@ -858,13 +859,16 @@ bool DrawRotationAdjustButton(const char* label, float& rot_value, float fine_st
             step = 180.0f;
             
         rot_value += is_plus ? step : -step;
+        clicked = true;
     }
+    ImGui::PopButtonRepeat();
+
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
     {
         ImGui::BeginTooltip();
-        ImGui::Text("Click: %.1f degree adjustment", fine_step);
-        ImGui::Text("CTRL + Click: 90 degree adjustment");
-        ImGui::Text("SHIFT + Click: 180 degree adjustment");
+        ImGui::Text("Click/Hold: %.1f degree adjustment", fine_step);
+        ImGui::Text("CTRL + Click/Hold: 90 degree adjustment");
+        ImGui::Text("SHIFT + Click/Hold: 180 degree adjustment");
         ImGui::EndTooltip();
     }
     return clicked;
@@ -872,8 +876,9 @@ bool DrawRotationAdjustButton(const char* label, float& rot_value, float fine_st
 
 bool DrawPositionAdjustButton(const char* label, float& pos_value, float fine_step, bool is_plus)
 {
-    bool clicked = ImGui::Button(label, ImVec2(FINE_ADJUST_BUTTON_WIDTH,0));
-    if (clicked)
+    bool clicked = false;
+    ImGui::PushButtonRepeat(true);              
+    if (ImGui::Button(label, ImVec2(FINE_ADJUST_BUTTON_WIDTH,0)))
     {
         float step = fine_step;
         if (ImGui::GetIO().KeyCtrl)
@@ -882,13 +887,16 @@ bool DrawPositionAdjustButton(const char* label, float& pos_value, float fine_st
             step = 0.100f;
             
         pos_value += is_plus ? step : -step;
+        clicked = true;
     }
+    ImGui::PopButtonRepeat();
+
     if (ImGui::IsItemHovered() && !ImGui::IsItemActive() && !ImGui::IsItemClicked())
     {
         ImGui::BeginTooltip();
-        ImGui::Text("Click: %.3f adjustment", fine_step);
-        ImGui::Text("CTRL + Click: 0.010 adjustment");
-        ImGui::Text("SHIFT + Click: 0.100 adjustment");
+        ImGui::Text("Click/Hold: %.3f adjustment", fine_step);
+        ImGui::Text("CTRL + Click/Hold: 0.010 adjustment");
+        ImGui::Text("SHIFT + Click/Hold: 0.100 adjustment");
         ImGui::EndTooltip();
     }
     return clicked;
