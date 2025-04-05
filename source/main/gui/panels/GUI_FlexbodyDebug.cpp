@@ -405,14 +405,6 @@ void FlexbodyDebug::AnalyzeFlexbodies()
             m_element_transforms[base_index + i].rotation = p.pp_rot;
             m_element_transforms[base_index + i].initialized = true;
         }
-
-        // Start with props tab and first prop selected
-        m_selected_tab = 1;
-        m_selected_prop = 0;
-        m_selected_flexbody = -1;
-        Prop& prop = actor->GetGfxActor()->getProps()[0];
-        m_edit_offset = prop.pp_offset;
-        m_raw_angles = prop.pp_rota;
     }
     // Store initial transform for ALL flexbodies
     else if (actor->GetGfxActor()->GetFlexbodies().size() > 0)
@@ -425,19 +417,9 @@ void FlexbodyDebug::AnalyzeFlexbodies()
             m_element_transforms[i].rotation = fb->GetInitialRotation();
             m_element_transforms[i].initialized = true;
         }
-
-        // Start with flexbodies tab and first flexbody selected
-        m_selected_tab = 0;
-        m_selected_flexbody = 0;
-        m_selected_prop = -1;
-        FlexBody* flexbody = actor->GetGfxActor()->GetFlexbodies()[0];
-        show_locator.resize(flexbody->getVertexCount(), false);
-        m_edit_offset = flexbody->GetInitialOffset();
-        m_edit_rotation = flexbody->GetInitialRotation();
     }
 
     m_offset_rot_changed = false;
-    m_values_initialized = false;
 }
 
 const ImVec4 FORSETNODE_COLOR_V4(1.f, 0.87f, 0.3f, 1.f);
