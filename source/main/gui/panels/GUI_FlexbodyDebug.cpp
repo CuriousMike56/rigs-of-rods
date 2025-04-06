@@ -333,29 +333,39 @@ void FlexbodyDebug::Draw()
             header_flags |= ImGuiTreeNodeFlags_DefaultOpen;
         }
         
-        // Display (ALPHA) as flexbody editing is not fully functional yet 
-        if (header_open = ImGui::CollapsingHeader(flexbody ? "Position & rotation (ALPHA)" : "Position & rotation", header_flags))
+        // Don't show position editor for aerial nav lights
+        bool display_position_editor = true;
+        if (prop && (prop->pp_beacon_type == 'L' || prop->pp_beacon_type == 'R' || prop->pp_beacon_type == 'w'))
         {
-            bool values_changed = false;
-            if (flexbody)
-            {
-                ImGui::Text("EXPERIMENTAL: Editing flexbodies is not fully supported yet!");
-                values_changed = this->DrawFlexbodyOffsetRotationEdit(flexbody);
-                if (values_changed)
-                {
-                    flexbody->computeFlexbody();
-                    flexbody->updateFlexbodyVertexBuffers();
-                }
-            }
-            else if (prop)
-            {
-                values_changed = this->DrawPropOffsetRotationEdit(prop);
-            }
-            m_offset_rot_changed = m_offset_rot_changed || values_changed;
+            display_position_editor = false;
         }
-        else
+
+        // Display (ALPHA) as flexbody editing is not fully functional yet
+        if (display_position_editor)
         {
-            m_is_editing = false;
+            if (header_open = ImGui::CollapsingHeader(flexbody ? "Position & rotation (ALPHA)" : "Position & rotation", header_flags))
+            {
+                bool values_changed = false;
+                if (flexbody)
+                {
+                    ImGui::Text("EXPERIMENTAL: Editing flexbodies is not fully supported yet!");
+                    values_changed = this->DrawFlexbodyOffsetRotationEdit(flexbody);
+                    if (values_changed)
+                    {
+                        flexbody->computeFlexbody();
+                        flexbody->updateFlexbodyVertexBuffers();
+                    }
+                }
+                else if (prop)
+                {
+                    values_changed = this->DrawPropOffsetRotationEdit(prop);
+                }
+                m_offset_rot_changed = m_offset_rot_changed || values_changed;
+            }
+            else
+            {
+                m_is_editing = false;
+            }
         }
 
         ImGui::Columns(1); // End columns
@@ -1138,8 +1148,8 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     }
 
     std::string csv;
-    // Format the base part that's common to all props
-    csv = fmt::format("{}, {}, {}, {}, {}, {}, {}, {}, {}",
+    // Format the base syntax
+    csv = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {:.0f}, {:.0f}, {:.0f}",
         prop->pp_node_ref,
         prop->pp_node_x,
         prop->pp_node_y,
