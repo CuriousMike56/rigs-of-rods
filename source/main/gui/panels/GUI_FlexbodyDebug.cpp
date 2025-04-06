@@ -1115,15 +1115,20 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     const std::string& mesh_name = (prop->pp_mesh_obj && prop->pp_mesh_obj->getLoadedMesh()) 
         ? prop->pp_mesh_obj->getLoadedMesh()->getName() : "";
 
-    bool is_beacon = (prop->pp_beacon_type != 0); // L/R/w aerial nav lights
+    bool is_beacon = (prop->pp_beacon_type != 0);
     bool is_dashboard = mesh_name.find("dashboard") != std::string::npos;
     bool has_steering_wheel = (prop->pp_wheel_mesh_obj != nullptr);
+    bool is_default_dash = (
+        mesh_name == "dashboard.mesh" ||
+        mesh_name == "dashboard-rh.mesh" ||
+        mesh_name == "dashboard-small.mesh"
+    );
 
     if (is_beacon)
     {
         ImGui::TextWrapped(";ref,  x,  y, offsetx, offsety, offsetz, rotx, roty, rotz, mesh  flare_mat_name  r,g,b");
     }
-    else if (is_dashboard && has_steering_wheel)
+    else if (is_dashboard && has_steering_wheel && !is_default_dash)
     {
         ImGui::TextWrapped(";ref,  x,  y, offsetx, offsety, offsetz, rotx, roty, rotz, mesh  steerwheel_mesh  dx,dy,dz,angle");
     }
@@ -1134,7 +1139,7 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
 
     std::string csv;
     // Format the base part that's common to all props
-    csv = fmt::format("{}, {}, {}, {:#}, {:#}, {:#}, {:#}, {:#}, {:#}",
+    csv = fmt::format("{}, {}, {}, {}, {}, {}, {}, {}, {}",
         prop->pp_node_ref,
         prop->pp_node_x,
         prop->pp_node_y,
@@ -1150,25 +1155,20 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     {
         csv += ", " + prop->pp_mesh_obj->getLoadedMesh()->getName();
     }
-    else
-    {
-        // Nav lights (beacons) have no mesh file
-        csv += ", none";
-    }
 
     // Special prop parameters
-    if (is_beacon && prop->pp_beacon_scene_node && *prop->pp_beacon_scene_node)
-    {
-        csv += " " + (*prop->pp_beacon_scene_node)->getName(); // Contains material name
-    }
-    else if (is_dashboard && has_steering_wheel && prop->pp_wheel_mesh_obj && prop->pp_wheel_mesh_obj->getLoadedMesh())
-    {
-        csv += " " + prop->pp_wheel_mesh_obj->getLoadedMesh()->getName();
-        csv += fmt::format(" {:#},{:#},{:#},{:#}",
-            prop->pp_wheel_pos.x,
-            prop->pp_wheel_pos.y, 
-            prop->pp_wheel_pos.z,
-            prop->pp_wheel_rot_degree);
+    if (is_dashboard && has_steering_wheel)
+    {                       
+        if (!is_default_dash)
+        {
+            // For custom dashboards: add steering wheel mesh name and transform
+            csv += " " + prop->pp_wheel_mesh_obj->getLoadedMesh()->getName();
+            csv += fmt::format(" {},{},{},{}",
+                prop->pp_wheel_pos.x,
+                prop->pp_wheel_pos.y, 
+                prop->pp_wheel_pos.z,
+                prop->pp_wheel_rot_degree);
+        }
     }
 
     // Display in a selectable text box
