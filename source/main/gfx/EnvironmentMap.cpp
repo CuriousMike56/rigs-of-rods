@@ -228,7 +228,7 @@ void RoR::GfxEnvmap::UpdateEnvMap(Ogre::Vector3 center, GfxActor* gfx_actor, boo
 
     for (int i = 0; i < NUM_FACES; i++)
     {
-        m_cameras[i]->getParentSceneNode()->setPosition(center);
+        m_cameras[i]->setPosition(center);
     }
 
     if (gfx_actor != nullptr)

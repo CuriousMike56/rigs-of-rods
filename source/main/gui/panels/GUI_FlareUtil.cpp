@@ -493,6 +493,7 @@ void FlareUtil::Draw()
             ImGui::Separator();
 
             // Additional properties
+            //RigDef::Flare2 flare2;
             //ImGui::Text(_LC("FlareUtil", "Material name: %s"), flare2.material_name.c_str());
             ImGui::Text(_LC("FlareUtil", "Blink delay: %d ms"), flare.blinkdelay > 0 ? (int)(flare.blinkdelay * 1000) : 0);
 
