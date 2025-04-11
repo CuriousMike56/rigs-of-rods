@@ -162,18 +162,6 @@ void FlareUtil::Draw()
             ImGui::TextWrapped("flares2");
             ImGui::TextWrapped(";RefNode, X, Y, OffsetX, OffsetY, OffsetZ, Type, ControlNumber, BlinkDelay, size MaterialName");
 
-            // Get material name for the current flare
-            std::string material_name = "default";
-            if (m_actor && m_actor->getUsedActorEntry()->actor_def && 
-            !m_actor->getUsedActorEntry()->actor_def->root_module->flares2.empty())
-            {
-                const auto& flares2_def = m_actor->getUsedActorEntry()->actor_def->root_module->flares2;
-                if (m_selected_flare < flares2_def.size())
-                {
-                    material_name = flares2_def[m_selected_flare].material_name;
-                }
-            }
-
             std::string csv = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {}, {:.3f} {}",
                 flare.noderef,
                 flare.nodex,
@@ -185,7 +173,7 @@ void FlareUtil::Draw()
                 flare.controlnumber,
                 (int)(flare.blinkdelay * 1000), // Convert to milliseconds
                 flare.size,
-                material_name);
+                flare.material_name);
 
             // Display in a selectable text box
             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
@@ -505,24 +493,10 @@ void FlareUtil::Draw()
             ImGui::Separator();
 
             // Additional properties
-            
-            if (m_actor && m_actor->getUsedActorEntry()->actor_def && 
-                !m_actor->getUsedActorEntry()->actor_def->root_module->flares2.empty())
-            {
-                std::string material_name = "default";
-                const auto& flares2_def = m_actor->getUsedActorEntry()->actor_def->root_module->flares2;
-                if (m_selected_flare < flares2_def.size())
-                {
-                    material_name = flares2_def[m_selected_flare].material_name;
-                }
-                ImGui::Text(_LC("FlareUtil", "Material name: %s"), material_name.c_str());
-            }
-            else
-            {
-                ImGui::Text(_LC("FlareUtil", "Material name: <no data>"));
-            }
 
             ImGui::Text(_LC("FlareUtil", "Blink delay: %d ms"), flare.blinkdelay > 0 ? (int)(flare.blinkdelay * 1000) : 0);
+            
+            ImGui::Text(_LC("FlareUtil", "Material name: %s"), flare.material_name.c_str());
 
             ImGui::EndGroup();
         }

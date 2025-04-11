@@ -2168,6 +2168,7 @@ void ActorSpawner::ProcessFlare2(RigDef::Flare2 & def)
     flare.offsety              = def.offset.y;
     flare.offsetz              = def.offset.z;
     flare.size                 = size;
+    flare.material_name        = def.material_name; // Only for editing UIs
 
     if (def.type == FlareType::USER)
     {

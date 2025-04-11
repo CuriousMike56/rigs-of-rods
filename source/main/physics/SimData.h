@@ -632,6 +632,7 @@ struct flare_t
     float intensity;
     bool uses_inertia = false; //!< Only 'flares3'
     SimpleInertia inertia; //!< Only 'flares3'
+    std::string material_name; // Only for editing UIs
 };
 
 /// User input state for animated props with 'source:event'.
