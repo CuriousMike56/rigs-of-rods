@@ -159,11 +159,22 @@ void FlareUtil::Draw()
             // Truck file format line for easy copy-paste
 
             ImGui::TextWrapped("Truck file format line:");
-            ImGui::TextWrapped("NOTE: This currently omits the material name, don't forget it!");
             ImGui::TextWrapped("flares2");
-            ImGui::TextWrapped(";RefNode, X, Y, OffsetX, OffsetY, OffsetZ, Type, ControlNumber, BlinkDelay, size, ...");
+            ImGui::TextWrapped(";RefNode, X, Y, OffsetX, OffsetY, OffsetZ, Type, ControlNumber, BlinkDelay, size MaterialName");
 
-            std::string csv = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {}, {:.3f}",
+            // Get material name for the current flare
+            std::string material_name = "default";
+            if (m_actor && m_actor->getUsedActorEntry()->actor_def && 
+            !m_actor->getUsedActorEntry()->actor_def->root_module->flares2.empty())
+            {
+                const auto& flares2_def = m_actor->getUsedActorEntry()->actor_def->root_module->flares2;
+                if (m_selected_flare < flares2_def.size())
+                {
+                    material_name = flares2_def[m_selected_flare].material_name;
+                }
+            }
+
+            std::string csv = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {}, {:.3f} {}",
                 flare.noderef,
                 flare.nodex,
                 flare.nodey,
@@ -173,7 +184,8 @@ void FlareUtil::Draw()
                 (char)flare.fl_type,
                 flare.controlnumber,
                 (int)(flare.blinkdelay * 1000), // Convert to milliseconds
-                flare.size);
+                flare.size,
+                material_name);
 
             // Display in a selectable text box
             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
@@ -493,8 +505,23 @@ void FlareUtil::Draw()
             ImGui::Separator();
 
             // Additional properties
-            //RigDef::Flare2 flare2;
-            //ImGui::Text(_LC("FlareUtil", "Material name: %s"), flare2.material_name.c_str());
+            
+            if (m_actor && m_actor->getUsedActorEntry()->actor_def && 
+                !m_actor->getUsedActorEntry()->actor_def->root_module->flares2.empty())
+            {
+                std::string material_name = "default";
+                const auto& flares2_def = m_actor->getUsedActorEntry()->actor_def->root_module->flares2;
+                if (m_selected_flare < flares2_def.size())
+                {
+                    material_name = flares2_def[m_selected_flare].material_name;
+                }
+                ImGui::Text(_LC("FlareUtil", "Material name: %s"), material_name.c_str());
+            }
+            else
+            {
+                ImGui::Text(_LC("FlareUtil", "Material name: <no data>"));
+            }
+
             ImGui::Text(_LC("FlareUtil", "Blink delay: %d ms"), flare.blinkdelay > 0 ? (int)(flare.blinkdelay * 1000) : 0);
 
             ImGui::EndGroup();
