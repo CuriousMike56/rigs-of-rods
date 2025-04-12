@@ -496,6 +496,10 @@ void FlareUtil::Draw()
 
             ImGui::Text(_LC("FlareUtil", "Blink delay: %d ms"), flare.blinkdelay > 0 ? (int)(flare.blinkdelay * 1000) : 0);
             
+            if (flare.material_name.empty())
+            {
+                flare.material_name = "default";
+            }
             ImGui::Text(_LC("FlareUtil", "Material name: %s"), flare.material_name.c_str());
 
             ImGui::EndGroup();
