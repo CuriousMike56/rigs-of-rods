@@ -100,6 +100,10 @@ void VidcamUtil::SetVisible(bool v)
                     state.node_alt_pos = vcams[i].vcam_node_alt_pos;
                     state.node_lookat = vcams[i].vcam_node_lookat;
                     state.field_of_view = vcams[i].vcam_ogre_camera->getFOVy().valueDegrees();
+                    state.tex_width = vcams[i].vcam_render_tex->getWidth();
+                    state.tex_height = vcams[i].vcam_render_tex->getHeight();
+                    state.near_clip = vcams[i].vcam_ogre_camera->getNearClipDistance();
+                    state.far_clip = vcams[i].vcam_ogre_camera->getFarClipDistance();
                     
                     m_orig_state[i] = state;
 
@@ -216,7 +220,6 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
     // Truck file format line for easy copy-paste
     {
         ImGui::TextWrapped("Truck file format line:");
-        ImGui::TextWrapped("NOTE: This currently only includes the first 12 values, don't forget the rest!");
         ImGui::TextWrapped("videocamera");
         ImGui::TextWrapped(";nref, nx, ny, ncam, nlookat, offx, offy, offz, rotx, roty, rotz, fov ...");
         
@@ -238,7 +241,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         int alt_pos_value = (is_tracking_mirror || vcam->vcam_node_alt_pos == NODENUM_INVALID) ? -1 : vcam->vcam_node_alt_pos;
 
         // Format truck file line
-        std::string csv = fmt::format("{}, {}, {}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.1f},",
+        std::string csv = fmt::format("{}, {}, {}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.1f}, {}, {}, {:.3f}, {:.3f}, {}, -2, {}",
             vcam->vcam_node_center,
             vcam->vcam_node_dir_z,
             vcam->vcam_node_dir_y,
@@ -248,7 +251,13 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             vcam->vcam_pos_offset.y,
             vcam->vcam_pos_offset.z,
             pitch, yaw, roll,
-            m_current_fov);
+            m_current_fov,
+            vcam->vcam_render_tex->getWidth(),
+            vcam->vcam_render_tex->getHeight(),
+            vcam->vcam_ogre_camera->getNearClipDistance(),
+            vcam->vcam_ogre_camera->getFarClipDistance(),
+            static_cast<int>(vcam->vcam_role),
+            vcam->vcam_mat_name_orig);
 
         // Display in a selectable text box
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
@@ -701,6 +710,128 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         m_current_fov = initial_fov;
         std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
         vcams[m_selected_videocam].vcam_ogre_camera->setFOVy(Ogre::Degree(m_current_fov));
+    }
+
+    ImGui::Separator();
+
+    // Texture dimensions
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f));
+    ImGui::TextWrapped("NOTE: Texture dimension changes are not reflected live!");
+    ImGui::PopStyleColor();
+    ImGui::Text(_LC("VidcamUtil", "Texture dimensions:"));
+    {
+        ImGui::Checkbox("Link dimensions##tex", &m_link_texture_dims);
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("When enabled, width and height will be adjusted together");
+        }
+
+        ImGui::PushItemWidth(w/2 - 10);
+        int tex_width = vcam->vcam_render_tex->getWidth();
+        int prev_width = tex_width;
+        if (ImGui::InputInt("Width##tex", &tex_width, 64, 256))
+        {
+            // Round to nearest multiple of 64
+            tex_width = std::max(64, std::min(4096, ((tex_width + 32) / 64) * 64));
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_render_tex->setWidth(tex_width);
+
+            // If dimensions are linked, adjust height to match
+            if (m_link_texture_dims)
+            {
+                vcams[m_selected_videocam].vcam_render_tex->setHeight(tex_width);
+            }
+        }
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Valid range: 64-4096 pixels\nWill be rounded to nearest multiple of 64");
+        }
+        
+        ImGui::SameLine();
+        if (ImGui::Button("Reset##tex_w"))
+        {
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_render_tex->setWidth(m_orig_state[m_selected_videocam].tex_width);
+            if (m_link_texture_dims)
+            {
+                vcams[m_selected_videocam].vcam_render_tex->setHeight(m_orig_state[m_selected_videocam].tex_width);
+            }
+        }
+        
+        if (!m_link_texture_dims)
+        {
+            int tex_height = vcam->vcam_render_tex->getHeight();
+            if (ImGui::InputInt("Height##tex", &tex_height, 64, 256))
+            {
+                // Round to nearest multiple of 64
+                tex_height = std::max(64, std::min(4096, ((tex_height + 32) / 64) * 64));
+                std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+                vcams[m_selected_videocam].vcam_render_tex->setHeight(tex_height);
+            }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("Valid range: 64-4096 pixels\nWill be rounded to nearest multiple of 64");
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Reset##tex_h"))
+            {
+                std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+                vcams[m_selected_videocam].vcam_render_tex->setHeight(m_orig_state[m_selected_videocam].tex_height);
+            }
+        }
+        else
+        {
+            // Show current height as read-only when linked
+            int tex_height = vcam->vcam_render_tex->getHeight();
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+            ImGui::InputInt("Height##tex", &tex_height, 0, 0, ImGuiInputTextFlags_ReadOnly);
+            ImGui::PopStyleColor();
+        }
+        ImGui::PopItemWidth();
+    }
+
+    ImGui::Separator();
+
+    // Clip distances
+    ImGui::Text(_LC("VidcamUtil", "Clip distances:"));
+    {
+        ImGui::PushItemWidth(w/2 - 10);
+        float near_clip = vcam->vcam_ogre_camera->getNearClipDistance();
+        if (ImGui::InputFloat("Near##clip", &near_clip, 0.1f, 1.0f, "%.3f"))
+        {
+            near_clip = std::max(0.1f, std::min(near_clip, 10.0f));
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_ogre_camera->setNearClipDistance(near_clip);
+        }
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Valid range: 0.1-10.0\nRecommended: 0.1-1.0");
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Reset##clip_near"))
+        {
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_ogre_camera->setNearClipDistance(m_orig_state[m_selected_videocam].near_clip);
+        }
+
+        float far_clip = vcam->vcam_ogre_camera->getFarClipDistance();
+        if (ImGui::InputFloat("Far##clip", &far_clip, 10.0f, 100.0f, "%.1f"))
+        {
+            far_clip = std::max(100.0f, std::min(far_clip, 10000.0f));
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_ogre_camera->setFarClipDistance(far_clip);
+        }
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Valid range: 100-10000\nRecommended: 1000-5000");
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Reset##clip_far"))
+        {
+            std::vector<VideoCamera>& vcams = const_cast<std::vector<VideoCamera>&>(m_actor->GetGfxActor()->getVideoCameras());
+            vcams[m_selected_videocam].vcam_ogre_camera->setFarClipDistance(m_orig_state[m_selected_videocam].far_clip);
+        }
+        ImGui::PopItemWidth();
     }
 
     ImGui::EndGroup();

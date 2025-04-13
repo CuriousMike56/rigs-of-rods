@@ -1,4 +1,6 @@
-props: support dashboard prop steering wheel in truck file line
-ignore default "dirwheel.mesh"
+props: support beacon special props
+vidcam: if alt_pos same as center node, set to -1, otherwise show it normally 
+flares: add multi-editing maybe?
+
 
 flexbodies: finish position/rotation editing (probably need help)

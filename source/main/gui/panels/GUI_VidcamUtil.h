@@ -54,6 +54,7 @@ private:
     bool m_is_visible = false;
     bool m_is_hovered = false;
     bool m_show_base_nodes = false;
+    bool m_link_texture_dims = true;
     ActorPtr m_actor;
     int m_selected_videocam = -1;
     float m_current_fov = 45.0f;
@@ -69,7 +70,11 @@ private:
             node_dir_z(0),
             node_alt_pos(NODENUM_INVALID),
             node_lookat(NODENUM_INVALID),
-            field_of_view(45.0f)
+            field_of_view(45.0f),
+            tex_width(0),
+            tex_height(0),
+            near_clip(0.1f),
+            far_clip(1000.0f)
         {}
 
         Ogre::Vector3    pos_offset;
@@ -80,6 +85,10 @@ private:
         int node_alt_pos;
         int node_lookat;
         float field_of_view;
+        int tex_width;
+        int tex_height;
+        float near_clip;
+        float far_clip;
     };
     std::map<int, VideoCamState> m_orig_state;
     
