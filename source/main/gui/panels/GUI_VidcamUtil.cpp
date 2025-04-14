@@ -236,16 +236,17 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             roll = rroll.valueDegrees();
         }
 
-        // For tracking mirrors, alt_pos should be -1 in truck file even though internally it's set to center node
-        // This works for the Thomas HDX, may not be OK for other vehicles
-        int alt_pos_value = (is_tracking_mirror || vcam->vcam_node_alt_pos == NODENUM_INVALID) ? -1 : vcam->vcam_node_alt_pos;
+        // For some mirrors like on the Thomas HDX and Liebherr 630-EC-H, the alt_pos node is set to -1, which makes it match the ref node
+        // In this case we set it to -1 in the truck file line
+        int alt_pos_node = (vcam->vcam_node_alt_pos == vcam->vcam_node_center) ? -1 : vcam->vcam_node_alt_pos;
+        alt_pos_node = (vcam->vcam_node_alt_pos == NODENUM_INVALID) ? -1 : alt_pos_node;
 
         // Format truck file line
         std::string truck_line = fmt::format("{}, {}, {}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.1f}, {}, {}, {:.3f}, {:.3f}, {}, -2, {}",
             vcam->vcam_node_center,
             vcam->vcam_node_dir_z,
             vcam->vcam_node_dir_y,
-            alt_pos_value,
+            alt_pos_node,
             vcam->vcam_node_lookat != NODENUM_INVALID ? vcam->vcam_node_lookat : -1,
             vcam->vcam_pos_offset.x,
             vcam->vcam_pos_offset.y,
@@ -330,9 +331,8 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
             vcams[m_selected_videocam].vcam_node_dir_y = m_orig_state[m_selected_videocam].node_dir_y;
         }
     }
-    
-    // Show alt reference node editor only if this is not a tracking mirror
-    if (vcam->vcam_node_alt_pos != NODENUM_INVALID && !is_tracking_mirror)
+
+    if (vcam->vcam_node_alt_pos != NODENUM_INVALID)
     {
         float w = ImGui::CalcTextSize("000").x + ImGui::GetStyle().FramePadding.x * 4;
         ImGui::PushItemWidth(w);
