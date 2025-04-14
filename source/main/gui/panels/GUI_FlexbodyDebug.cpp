@@ -1147,9 +1147,9 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
         ImGui::TextWrapped(";ref,  x,  y, offsetx, offsety, offsetz, rotx, roty, rotz, mesh");
     }
 
-    std::string csv;
+    std::string truck_line;
     // Format the base syntax
-    csv = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {:.0f}, {:.0f}, {:.0f}",
+    truck_line = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {:.0f}, {:.0f}, {:.0f}",
         prop->pp_node_ref,
         prop->pp_node_x,
         prop->pp_node_y,
@@ -1163,7 +1163,7 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     // Add mesh name
     if (prop->pp_mesh_obj && prop->pp_mesh_obj->getLoadedMesh())
     {
-        csv += ", " + prop->pp_mesh_obj->getLoadedMesh()->getName();
+        truck_line += ", " + prop->pp_mesh_obj->getLoadedMesh()->getName();
     }
 
     // Special prop parameters
@@ -1172,8 +1172,8 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
         if (!is_default_dash)
         {
             // For custom dashboards: add steering wheel mesh name and transform
-            csv += " " + prop->pp_wheel_mesh_obj->getLoadedMesh()->getName();
-            csv += fmt::format(" {},{},{},{}",
+            truck_line += " " + prop->pp_wheel_mesh_obj->getLoadedMesh()->getName();
+            truck_line += fmt::format(" {},{},{},{}",
                 prop->pp_wheel_pos.x,
                 prop->pp_wheel_pos.y, 
                 prop->pp_wheel_pos.z,
@@ -1183,12 +1183,12 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
 
     // Display in a selectable text box
     ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
-    ImGui::InputText("##truckline", const_cast<char*>(csv.c_str()), csv.length(), ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputText("##truckline", const_cast<char*>(truck_line.c_str()), truck_line.length(), ImGuiInputTextFlags_ReadOnly);
     ImGui::PopStyleColor();
 
     if (ImGui::Button("Copy to clipboard"))
     {
-        ImGui::SetClipboardText(csv.c_str());
+        ImGui::SetClipboardText(truck_line.c_str());
     }
 
     // Position sliders with fine adjustment

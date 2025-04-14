@@ -163,7 +163,7 @@ void VidcamUtil::Draw()
         ImGui::Text(_LC("VidcamUtil", "VideoCameras: %d"), vcams.size());
 
         ImGui::BeginChild("camera_list", ImVec2(200, 0), true);
-        // Display cameras in truck file definition order
+        // Display cameras in truck file definition order (mirror order still reversed for some reason)
         for (size_t i = 0; i < m_camera_order.size(); i++)
         {
             const auto& cam_info = m_camera_order[i];
@@ -241,7 +241,7 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         int alt_pos_value = (is_tracking_mirror || vcam->vcam_node_alt_pos == NODENUM_INVALID) ? -1 : vcam->vcam_node_alt_pos;
 
         // Format truck file line
-        std::string csv = fmt::format("{}, {}, {}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.1f}, {}, {}, {:.3f}, {:.3f}, {}, -2, {}",
+        std::string truck_line = fmt::format("{}, {}, {}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.1f}, {}, {}, {:.3f}, {:.3f}, {}, -2, {}",
             vcam->vcam_node_center,
             vcam->vcam_node_dir_z,
             vcam->vcam_node_dir_y,
@@ -261,12 +261,12 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
 
         // Display in a selectable text box
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
-        ImGui::InputText("##truckline", const_cast<char*>(csv.c_str()), csv.length(), ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputText("##truckline", const_cast<char*>(truck_line.c_str()), truck_line.length(), ImGuiInputTextFlags_ReadOnly);
         ImGui::PopStyleColor();
 
         if (ImGui::Button("Copy to clipboard"))
         {
-            ImGui::SetClipboardText(csv.c_str());
+            ImGui::SetClipboardText(truck_line.c_str());
         }
     }
 

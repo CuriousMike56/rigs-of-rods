@@ -69,8 +69,7 @@ private:
     bool m_is_editing = false; // Track if we're currently editing
     Ogre::Vector3 m_initial_local_pos;     // Store initial local position 
     Ogre::Quaternion m_initial_local_rot;  // Store initial local rotation
-
-    // Add these member variables back
+    
     Ogre::Vector3 m_edit_offset = Ogre::Vector3::ZERO;
     Ogre::Quaternion m_edit_rotation = Ogre::Quaternion::IDENTITY;
     bool m_offset_rot_changed = false;

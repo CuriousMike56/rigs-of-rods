@@ -162,7 +162,7 @@ void FlareUtil::Draw()
             ImGui::TextWrapped("flares2");
             ImGui::TextWrapped(";RefNode, X, Y, OffsetX, OffsetY, OffsetZ, Type, ControlNumber, BlinkDelay, size MaterialName");
 
-            std::string csv = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {}, {:.3f} {}",
+            std::string truck_line = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {}, {:.3f} {}",
                 flare.noderef,
                 flare.nodex,
                 flare.nodey,
@@ -177,12 +177,12 @@ void FlareUtil::Draw()
 
             // Display in a selectable text box
             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
-            ImGui::InputText("##truckline", const_cast<char*>(csv.c_str()), csv.length(), ImGuiInputTextFlags_ReadOnly);
+            ImGui::InputText("##truckline", const_cast<char*>(truck_line.c_str()), truck_line.length(), ImGuiInputTextFlags_ReadOnly);
             ImGui::PopStyleColor();
 
             if (ImGui::Button("Copy to clipboard"))
             {
-                ImGui::SetClipboardText(csv.c_str());
+                ImGui::SetClipboardText(truck_line.c_str());
             }
 
             ImGui::Separator();
