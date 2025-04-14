@@ -1167,18 +1167,32 @@ bool FlexbodyDebug::DrawPropOffsetRotationEdit(Prop* prop)
     }
 
     // Special prop parameters
-    if (is_dashboard && has_steering_wheel)
-    {                       
-        if (!is_default_dash)
+    if (is_beacon)
+    {
+        // Only output flare parameters if it's not the default beacon mesh
+        if ((!prop->pp_mesh_obj || !prop->pp_mesh_obj->getLoadedMesh() || 
+             prop->pp_mesh_obj->getLoadedMesh()->getName() != "beacon.mesh") 
+            && prop->pp_beacon_bbs[0])
         {
-            // For custom dashboards: add steering wheel mesh name and transform
-            truck_line += " " + prop->pp_wheel_mesh_obj->getLoadedMesh()->getName();
-            truck_line += fmt::format(" {},{},{},{}",
-                prop->pp_wheel_pos.x,
-                prop->pp_wheel_pos.y, 
-                prop->pp_wheel_pos.z,
-                prop->pp_wheel_rot_degree);
+            truck_line += " " + prop->pp_media[1];  // Flare material name
+            
+            // Extract color from beacon light if present
+            if (prop->pp_beacon_light[0])
+            {
+                Ogre::ColourValue color = prop->pp_beacon_light[0]->getDiffuseColour();
+                truck_line += fmt::format(" {}, {}, {}", color.r, color.g, color.b);
+            }
         }
+    }
+    else if (is_dashboard && has_steering_wheel && !is_default_dash)
+    {
+        // For custom dashboards: add steering wheel mesh name and transform
+        truck_line += " " + prop->pp_wheel_mesh_obj->getLoadedMesh()->getName();
+        truck_line += fmt::format(" {},{},{},{}",
+            prop->pp_wheel_pos.x,
+            prop->pp_wheel_pos.y, 
+            prop->pp_wheel_pos.z,
+            prop->pp_wheel_rot_degree);
     }
 
     // Display in a selectable text box

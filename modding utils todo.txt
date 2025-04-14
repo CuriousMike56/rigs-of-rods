@@ -1,8 +1,3 @@
-props: support beacon special props
-
-vidcam: if alt_pos same as center node, set to -1, otherwise show it normally
-link texture sizes when selecting camera only if values already match
-
 flares: add multi-editing maybe?
 
 
