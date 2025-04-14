@@ -635,6 +635,8 @@ void VidcamUtil::DrawVideoCamera(const VideoCamera* vcam)
         {
             m_current_fov = m_orig_state[m_selected_videocam].field_of_view;
             initial_fov = m_current_fov;
+            // Only enable linked dimensions if width and height match
+            m_link_texture_dims = (vcam->vcam_render_tex->getWidth() == vcam->vcam_render_tex->getHeight());
             prev_selected_cam = m_selected_videocam;
         }
 
