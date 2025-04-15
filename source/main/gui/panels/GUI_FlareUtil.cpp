@@ -157,12 +157,147 @@ void FlareUtil::Draw()
             ImGui::BeginGroup();
 
             // Truck file format line for easy copy-paste
-
             ImGui::TextWrapped("Truck file format line:");
-            ImGui::TextWrapped("flares2");
-            ImGui::TextWrapped(";RefNode, X, Y, OffsetX, OffsetY, OffsetZ, Type, ControlNumber, BlinkDelay, size MaterialName");
 
-            std::string truck_line = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {}, {:.3f} {}",
+            // Build lines for all flares
+            std::string truck_lines = "flares2\n";
+            truck_lines += ";RefNode, X, Y, OffsetX, OffsetY, OffsetZ, Type, ControlNumber, BlinkDelay, size MaterialName\n";
+
+            // Helper function to format flare line
+            auto format_flare_line = [](const flare_t& f) {
+                std::string mat_name = f.material_name.empty() ? "default" : f.material_name;
+                return fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {}, {:.3f} {}\n",
+                    f.noderef, f.nodex, f.nodey, f.offsetx, f.offsety, f.offsetz,
+                    (char)f.fl_type, f.controlnumber, (int)(f.blinkdelay * 1000), f.size, mat_name);
+            };
+
+            // Helper to add type section
+            auto add_type_section = [&](const char* comment, FlareType type) {
+                bool section_added = false;
+                for (const flare_t& f : m_actor->ar_flares) {
+                    if (f.fl_type == type) {
+                        if (!section_added) {
+                            truck_lines += fmt::format(";{}\n", comment);
+                            section_added = true;
+                        }
+                        truck_lines += format_flare_line(f);
+                    }
+                }
+            };
+
+            // Add sections in order
+            add_type_section("headlights", FlareType::HEADLIGHT);
+            add_type_section("high beams", FlareType::HIGH_BEAM);
+            add_type_section("turn signals left", FlareType::BLINKER_LEFT);
+            add_type_section("turn signals right", FlareType::BLINKER_RIGHT);
+            add_type_section("fog lights", FlareType::FOG_LIGHT);
+            add_type_section("brake lights", FlareType::BRAKE_LIGHT);
+            add_type_section("tail lights", FlareType::TAIL_LIGHT);
+            add_type_section("reverse lights", FlareType::REVERSE_LIGHT);
+            add_type_section("dashboard", FlareType::DASHBOARD);
+            
+            // User flares last
+            bool user_section_added = false;
+            for (const flare_t& f : m_actor->ar_flares) {
+                if (f.fl_type == FlareType::USER) {
+                    if (!user_section_added) {
+                        truck_lines += ";user controlled\n";
+                        user_section_added = true;
+                    }
+                    truck_lines += format_flare_line(f);
+                }
+            }
+
+            // Create child window for scrolling
+            static float text_box_height = ImGui::GetTextLineHeight() * 8;
+            ImGui::BeginChild("truck_lines", ImVec2(-1, text_box_height), true);
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+
+            // Split lines and make them selectable
+            std::istringstream lines(truck_lines);
+            std::string line;
+            int line_number = 0;
+            bool header_done = false;
+            
+            while (std::getline(lines, line))
+            {
+                // Skip header lines
+                if (!header_done) 
+                {
+                    if (line.find("flares2") != std::string::npos || 
+                        line.find(";RefNode") != std::string::npos)
+                    {
+                        ImGui::TextUnformatted(line.c_str());
+                        continue;
+                    }
+                    header_done = true;
+                }
+
+                // Skip comment lines
+                if (line.empty() || line[0] == ';')
+                {
+                    ImGui::TextUnformatted(line.c_str());
+                    continue;
+                }
+
+                // Make actual flare lines selectable
+                if (ImGui::Selectable(line.c_str(), false))
+                {
+                    // Try to match line with a flare
+                    for (size_t i = 0; i < m_actor->ar_flares.size(); i++)
+                    {
+                        const flare_t& f = m_actor->ar_flares[i];
+                        std::string mat_name = f.material_name.empty() ? "default" : f.material_name;
+                        std::string flare_line = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {}, {:.3f} {}",
+                            f.noderef, f.nodex, f.nodey, f.offsetx, f.offsety, f.offsetz,
+                            (char)f.fl_type, f.controlnumber, (int)(f.blinkdelay * 1000), f.size, mat_name);
+
+                        if (line == flare_line)
+                        {
+                            m_selected_flare = i;
+                            // Store original values
+                            m_spawn_values.offset_x = f.offsetx;
+                            m_spawn_values.offset_y = f.offsety;
+                            m_spawn_values.offset_z = f.offsetz;
+                            m_spawn_values.size = f.size;
+                            m_spawn_values.noderef = f.noderef;
+                            m_spawn_values.nodex = f.nodex;
+                            m_spawn_values.nodey = f.nodey;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            ImGui::PopStyleColor();
+            ImGui::EndChild();
+
+            // Add resize handle
+            static const float min_height = ImGui::GetTextLineHeight() * 6;
+            static const float max_height = ImGui::GetTextLineHeight() * 30;
+            ImGui::InvisibleButton("resize_handle", ImVec2(-1, 3));
+            if (ImGui::IsItemActive())
+            {
+                text_box_height += ImGui::GetIO().MouseDelta.y;
+                text_box_height = std::max(min_height, std::min(text_box_height, max_height));
+            }
+            if (ImGui::IsItemHovered())
+                ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+
+            if (ImGui::Button(_LC("FlareUtil", "Copy to clipboard")))
+            {
+                ImGui::SetClipboardText(truck_lines.c_str());
+            }
+
+            ImGui::Separator();
+
+            // Display active flare line
+            ImGui::Text(_LC("FlareUtil", "Active flare controls:\n"));
+            ImGui::Text(_LC("FlareUtil", "Type: %c (%s)"), (char)flare.fl_type, GetFlareTypeDesc(flare.fl_type));
+
+            // Show truck file line for active flare in a selectable text box
+            std::string mat_name = flare.material_name.empty() ? "default" : flare.material_name;
+            std::string active_line = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {}, {:.3f} {}",
                 flare.noderef,
                 flare.nodex,
                 flare.nodey,
@@ -171,25 +306,19 @@ void FlareUtil::Draw()
                 flare.offsetz,
                 (char)flare.fl_type,
                 flare.controlnumber,
-                (int)(flare.blinkdelay * 1000), // Convert to milliseconds
+                (int)(flare.blinkdelay * 1000),
                 flare.size,
-                flare.material_name);
+                mat_name);
 
-            // Display in a selectable text box
             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
-            ImGui::InputText("##truckline", const_cast<char*>(truck_line.c_str()), truck_line.length(), ImGuiInputTextFlags_ReadOnly);
+            ImGui::InputText("##activeline", (char*)active_line.c_str(), 
+                active_line.length(), ImGuiInputTextFlags_ReadOnly);
             ImGui::PopStyleColor();
 
-            if (ImGui::Button("Copy to clipboard"))
+            if (ImGui::Button(_LC("FlareUtil", "Copy active")))
             {
-                ImGui::SetClipboardText(truck_line.c_str());
+                ImGui::SetClipboardText(active_line.c_str());
             }
-
-            ImGui::Separator();
-
-            // Display type and reference nodes
-
-            ImGui::Text(_LC("FlareUtil", "Type: %c (%s)"), (char)flare.fl_type, GetFlareTypeDesc(flare.fl_type));
             
             // Node editors
             {
