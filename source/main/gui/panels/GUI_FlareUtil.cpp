@@ -186,7 +186,7 @@ void FlareUtil::Draw()
             };
 
             // Add sections in order
-            add_type_section("headlights", FlareType::HEADLIGHT);
+            add_type_section("low beams", FlareType::HEADLIGHT);
             add_type_section("high beams", FlareType::HIGH_BEAM);
             add_type_section("turn signals left", FlareType::BLINKER_LEFT);
             add_type_section("turn signals right", FlareType::BLINKER_RIGHT);
@@ -194,7 +194,7 @@ void FlareUtil::Draw()
             add_type_section("brake lights", FlareType::BRAKE_LIGHT);
             add_type_section("tail lights", FlareType::TAIL_LIGHT);
             add_type_section("reverse lights", FlareType::REVERSE_LIGHT);
-            add_type_section("dashboard", FlareType::DASHBOARD);
+            add_type_section("dashboard links", FlareType::DASHBOARD);
             
             // User flares last
             bool user_section_added = false;
