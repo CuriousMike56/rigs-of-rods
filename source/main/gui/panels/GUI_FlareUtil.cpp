@@ -32,6 +32,7 @@
 #include "OgreCamera.h" 
 #include "GfxActor.h" 
 #include "Utils.h"
+#include "DashBoardManager.h"
 
 using namespace RoR;
 using namespace GUI;
@@ -164,11 +165,15 @@ void FlareUtil::Draw()
             truck_lines += ";RefNode, X, Y, OffsetX, OffsetY, OffsetZ, Type, ControlNumber, BlinkDelay, size MaterialName\n";
 
             // Helper function to format flare line
-            auto format_flare_line = [](const flare_t& f) {
+            auto format_flare_line = [&](const flare_t& f) {
                 std::string mat_name = f.material_name.empty() ? "default" : f.material_name;
                 return fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {}, {:.3f} {}\n",
                     f.noderef, f.nodex, f.nodey, f.offsetx, f.offsety, f.offsetz,
-                    (char)f.fl_type, f.controlnumber, (int)(f.blinkdelay * 1000), f.size, mat_name);
+                    (char)f.fl_type, 
+                    (f.fl_type == FlareType::DASHBOARD) ? 
+                        m_actor->ar_dashboard->getLinkNameForID((DashData)f.dashboard_link) :
+                        std::to_string(f.controlnumber + 1),
+                    (int)(f.blinkdelay * 1000), f.size, mat_name);
             };
 
             // Helper to add type section
@@ -250,7 +255,11 @@ void FlareUtil::Draw()
                         std::string mat_name = f.material_name.empty() ? "default" : f.material_name;
                         std::string flare_line = fmt::format("{}, {}, {}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {}, {:.3f} {}",
                             f.noderef, f.nodex, f.nodey, f.offsetx, f.offsety, f.offsetz,
-                            (char)f.fl_type, f.controlnumber, (int)(f.blinkdelay * 1000), f.size, mat_name);
+                            (char)f.fl_type,
+                            (f.fl_type == FlareType::DASHBOARD) ?
+                                m_actor->ar_dashboard->getLinkNameForID((DashData)f.dashboard_link) :
+                                std::to_string(f.controlnumber + 1),
+                            (int)(f.blinkdelay * 1000), f.size, mat_name);
 
                         if (line == flare_line)
                         {
@@ -305,7 +314,9 @@ void FlareUtil::Draw()
                 flare.offsety,
                 flare.offsetz,
                 (char)flare.fl_type,
-                flare.controlnumber,
+                (flare.fl_type == FlareType::DASHBOARD) ? 
+                    m_actor->ar_dashboard->getLinkNameForID((DashData)m_actor->ar_flares[m_selected_flare].dashboard_link) :
+                    std::to_string(flare.controlnumber + 1),
                 (int)(flare.blinkdelay * 1000),
                 flare.size,
                 mat_name);
@@ -365,10 +376,6 @@ void FlareUtil::Draw()
             }
 
             ImGui::Checkbox("Show##base", &m_show_base_nodes);
-            if (flare.fl_type == FlareType::USER)
-            {
-                ImGui::Text(_LC("FlareUtil", "Control number: %d"), flare.controlnumber + 1);
-            }
 
             ImGui::Separator();
 
@@ -622,6 +629,15 @@ void FlareUtil::Draw()
             ImGui::Separator();
 
             // Additional properties
+
+            if (flare.fl_type == FlareType::USER)
+            {
+                ImGui::Text(_LC("FlareUtil", "Control number: %d"), flare.controlnumber + 1);
+            }
+            if (flare.fl_type == FlareType::DASHBOARD)
+            {
+                ImGui::Text(_LC("FlareUtil", "Dashboard link: %s"), m_actor->ar_dashboard->getLinkNameForID((DashData)m_actor->ar_flares[m_selected_flare].dashboard_link));
+            }
 
             ImGui::Text(_LC("FlareUtil", "Blink delay: %d ms"), flare.blinkdelay > 0 ? (int)(flare.blinkdelay * 1000) : 0);
             
