@@ -88,7 +88,7 @@ elseif (BUILD_DEV_VERSION)
         #   * 'dev' to indicate development build
         #   * sha1sum of latest commit
         #   * 'dirty' flag in case of local modifications
-        set(VERSION_SUFFIX "-dev-${GIT_HASH}")
+        set(VERSION_SUFFIX "-moddingutils-${GIT_HASH}")
         if (IS_DIRTY)
             set(VERSION_SUFFIX "${VERSION_SUFFIX}-dirty")
         endif ()
@@ -96,7 +96,7 @@ elseif (BUILD_DEV_VERSION)
     else ()
         # Use the following version string suffix if git is not available or not inside a valid
         # git repository
-        set(VERSION_SUFFIX "-dev-without-git")
+        set(VERSION_SUFFIX "-moddingutils-without-git")
     endif ()
 endif ()
 
